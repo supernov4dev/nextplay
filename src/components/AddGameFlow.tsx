@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import type { IgdbGame } from '@/lib/igdb'
 import { GameSearch } from '@/components/GameSearch'
 import { EntryForm, toPersonalPayload, type EntryFormValues } from '@/components/EntryForm'
+import { STATUS_OPTIONS } from '@/lib/status'
 
 type Feedback = { kind: 'created' | 'merged'; title: string } | null
 
@@ -43,9 +44,10 @@ export function AddGameFlow() {
       const title = selected?.title ?? manualTitle
       setFeedback({ kind: data.created ? 'created' : 'merged', title })
       setSelected(null)
+      setManualMode(false)
       setManualTitle('')
       setManualYear('')
-      if (!serieMode) router.push(`/jeux/${data.entryId}`)
+      if (data.created && !serieMode) router.push(`/jeux/${data.entryId}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue')
     } finally {
@@ -81,10 +83,11 @@ export function AddGameFlow() {
               onChange={(e) => setDefaults((d) => ({ ...d, status: e.target.value }))}
               className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1"
             >
-              <option value="FINISHED">Terminé</option>
-              <option value="DROPPED">Abandonné</option>
-              <option value="PAUSED">En pause</option>
-              <option value="TO_SORT">À trier</option>
+              {STATUS_OPTIONS.map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
             </select>
           </label>
         </div>
@@ -101,8 +104,8 @@ export function AddGameFlow() {
 
       {!selected && !manualMode && (
         <>
-          <GameSearch onSelect={(g) => { setSelected(g); setFeedback(null) }} />
-          <button type="button" onClick={() => setManualMode(true)} className="text-sm text-zinc-400 hover:text-white">
+          <GameSearch onSelect={(g) => { setSelected(g); setFeedback(null); setError(null) }} />
+          <button type="button" onClick={() => { setManualMode(true); setError(null) }} className="text-sm text-zinc-400 hover:text-white">
             Jeu introuvable ? Créer une fiche manuelle
           </button>
         </>
@@ -115,7 +118,7 @@ export function AddGameFlow() {
               {selected.title}
               {selected.releaseYear && <span className="ml-2 text-zinc-500">{selected.releaseYear}</span>}
             </h2>
-            <button type="button" onClick={() => setSelected(null)} className="text-sm text-zinc-400 hover:text-white">
+            <button type="button" onClick={() => { setSelected(null); setError(null) }} className="text-sm text-zinc-400 hover:text-white">
               Changer de jeu
             </button>
           </div>
@@ -127,7 +130,7 @@ export function AddGameFlow() {
         <div className="space-y-3 rounded border border-zinc-800 p-4">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold">Fiche manuelle</h2>
-            <button type="button" onClick={() => setManualMode(false)} className="text-sm text-zinc-400 hover:text-white">
+            <button type="button" onClick={() => { setManualMode(false); setError(null) }} className="text-sm text-zinc-400 hover:text-white">
               Retour à la recherche
             </button>
           </div>
