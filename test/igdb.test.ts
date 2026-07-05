@@ -1,0 +1,87 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { searchGames, getGameById, resetTokenCache } from '@/lib/igdb'
+
+const TOKEN_RESPONSE = { access_token: 'tok-123', expires_in: 5000 }
+const RAW_GAME = {
+  id: 1942,
+  name: 'The Witcher 3: Wild Hunt',
+  summary: 'Geralt of Rivia...',
+  first_release_date: 1431993600, // 2015-05-19
+  total_rating: 93.4,
+  cover: { image_id: 'co1wyy' },
+  genres: [{ name: 'Role-playing (RPG)' }],
+  themes: [{ name: 'Fantasy' }],
+  platforms: [{ name: 'PC (Microsoft Windows)' }, { name: 'PlayStation 4' }],
+}
+
+function mockFetch(gameResults: unknown[]) {
+  return vi.fn(async (url: RequestInfo | URL) => {
+    if (String(url).includes('id.twitch.tv')) {
+      return new Response(JSON.stringify(TOKEN_RESPONSE), { status: 200 })
+    }
+    return new Response(JSON.stringify(gameResults), { status: 200 })
+  })
+}
+
+beforeEach(() => resetTokenCache())
+
+describe('searchGames', () => {
+  it('mappe la réponse IGDB vers IgdbGame', async () => {
+    vi.stubGlobal('fetch', mockFetch([RAW_GAME]))
+    const results = await searchGames('witcher')
+    expect(results).toHaveLength(1)
+    expect(results[0]).toEqual({
+      igdbId: 1942,
+      title: 'The Witcher 3: Wild Hunt',
+      coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1wyy.jpg',
+      releaseYear: 2015,
+      summary: 'Geralt of Rivia...',
+      genres: ['Role-playing (RPG)'],
+      themes: ['Fantasy'],
+      platforms: ['PC (Microsoft Windows)', 'PlayStation 4'],
+      igdbRating: 93.4,
+    })
+  })
+
+  it('tolère les champs absents (jaquette, date, genres...)', async () => {
+    vi.stubGlobal('fetch', mockFetch([{ id: 7, name: 'Jeu obscur' }]))
+    const [game] = await searchGames('obscur')
+    expect(game.coverUrl).toBeNull()
+    expect(game.releaseYear).toBeNull()
+    expect(game.genres).toEqual([])
+    expect(game.igdbRating).toBeNull()
+  })
+
+  it("réutilise le token entre deux appels (une seule requête d'auth)", async () => {
+    const fetchMock = mockFetch([RAW_GAME])
+    vi.stubGlobal('fetch', fetchMock)
+    await searchGames('a')
+    await searchGames('b')
+    const authCalls = fetchMock.mock.calls.filter(([u]) =>
+      String(u).includes('id.twitch.tv'),
+    )
+    expect(authCalls).toHaveLength(1)
+  })
+
+  it('lève une erreur si IGDB répond en échec', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (url: RequestInfo | URL) =>
+      String(url).includes('id.twitch.tv')
+        ? new Response(JSON.stringify(TOKEN_RESPONSE), { status: 200 })
+        : new Response('oops', { status: 500 }),
+    ))
+    await expect(searchGames('x')).rejects.toThrow()
+  })
+})
+
+describe('getGameById', () => {
+  it('retourne le jeu si trouvé', async () => {
+    vi.stubGlobal('fetch', mockFetch([RAW_GAME]))
+    const game = await getGameById(1942)
+    expect(game?.title).toBe('The Witcher 3: Wild Hunt')
+  })
+
+  it('retourne null si introuvable', async () => {
+    vi.stubGlobal('fetch', mockFetch([]))
+    expect(await getGameById(999999)).toBeNull()
+  })
+})
