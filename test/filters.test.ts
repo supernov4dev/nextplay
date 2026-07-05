@@ -23,4 +23,9 @@ describe('parseFilters', () => {
       parseFilters({ status: 'NIMPORTE', sort: 'hack', decade: 'abc' }),
     ).toEqual({ sort: 'recent' })
   })
+
+  it("ignore les propriétés du prototype ('constructor', 'toString'...) comme statut", () => {
+    expect(parseFilters({ status: 'constructor' })).toEqual({ sort: 'recent' })
+    expect(parseFilters({ status: 'toString' })).toEqual({ sort: 'recent' })
+  })
 })

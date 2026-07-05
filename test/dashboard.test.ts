@@ -32,6 +32,7 @@ describe('getDashboard', () => {
     expect(d.byStatus.TO_SORT).toBe(1)
     expect(d.playing.map((e) => e.game.title)).toEqual(['A'])
     expect(d.toSort.map((e) => e.game.title)).toEqual(['C'])
+    expect(d.topRated).toHaveLength(2)
     expect(d.topRated[0].game.title).toBe('B')
     expect(d.recent).toHaveLength(3)
   })

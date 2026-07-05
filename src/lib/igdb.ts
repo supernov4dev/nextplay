@@ -88,7 +88,7 @@ async function igdbQuery(body: string): Promise<RawGame[]> {
 }
 
 export async function searchGames(query: string): Promise<IgdbGame[]> {
-  const safe = query.replaceAll('"', '')
+  const safe = query.replace(/["\\]/g, '')
   const raw = await igdbQuery(`search "${safe}"; ${GAME_FIELDS} limit 10;`)
   return raw.map(toIgdbGame)
 }

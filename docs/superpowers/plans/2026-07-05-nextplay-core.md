@@ -6,7 +6,7 @@
 
 **Architecture:** Application Next.js (App Router) monolithique : les pages serveur interrogent Prisma directement, les interactions client passent par des route handlers `/api/*`. PostgreSQL en Docker pour le dev. Le client IGDB (auth Twitch) vit dans `src/lib/` avec le reste de la logique métier, testée par Vitest.
 
-**Tech Stack:** Next.js 15 (App Router) · TypeScript strict · Tailwind CSS 4 · Prisma 6 · PostgreSQL 16 · Vitest · Node ≥ 22.12
+**Tech Stack:** Next.js 16 (App Router — version installée : 16.x) · TypeScript strict · Tailwind CSS 4 · Prisma 6 · PostgreSQL 16 · Vitest · Node ≥ 22.12
 
 **Spec :** `docs/superpowers/specs/2026-07-05-nextplay-design.md`. Ce plan couvre les sections 3, 4, 5.1, 5.2, 5.3 du spec. Hors périmètre de ce plan (plans suivants) : import Steam (plan 2), recommandations IA (plan 3), Dockerfile/CI/k8s (plan 4).
 

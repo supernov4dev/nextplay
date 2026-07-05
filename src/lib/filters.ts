@@ -1,4 +1,5 @@
 import { EntryStatus } from '@prisma/client'
+import { isEntryStatus } from '@/lib/status'
 
 export type LibrarySort = 'recent' | 'title' | 'rating' | 'releaseYear'
 
@@ -23,8 +24,7 @@ export function parseFilters(
       ? (params.sort as LibrarySort)
       : 'recent',
   }
-  if (params.status && params.status in EntryStatus)
-    filters.status = params.status as EntryStatus
+  if (isEntryStatus(params.status)) filters.status = params.status
   if (params.platform) filters.platform = params.platform
   if (params.genre) filters.genre = params.genre
   const decade = Number(params.decade)

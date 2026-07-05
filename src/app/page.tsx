@@ -1,9 +1,8 @@
 import Link from 'next/link'
 import { getDashboard } from '@/lib/dashboard'
 import { DEFAULT_USER_ID } from '@/lib/user'
-import { STATUS_LABELS } from '@/lib/status'
+import { STATUS_LABELS, STATUS_OPTIONS } from '@/lib/status'
 import { GameRow } from '@/components/GameRow'
-import type { EntryStatus } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,13 +28,13 @@ export default async function HomePage() {
           <p className="text-2xl font-bold">{d.total}</p>
           <p className="text-xs text-zinc-400">jeux au total</p>
         </div>
-        {(Object.entries(d.byStatus) as [EntryStatus, number][]).map(([status, count]) => (
+        {STATUS_OPTIONS.filter(([status]) => d.byStatus[status]).map(([status]) => (
           <Link
             key={status}
             href={`/jeux?status=${status}`}
             className="rounded border border-zinc-800 px-4 py-2 hover:border-zinc-600"
           >
-            <p className="text-2xl font-bold">{count}</p>
+            <p className="text-2xl font-bold">{d.byStatus[status]}</p>
             <p className="text-xs text-zinc-400">{STATUS_LABELS[status]}</p>
           </Link>
         ))}

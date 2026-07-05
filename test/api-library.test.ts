@@ -76,6 +76,23 @@ describe('POST /api/library', () => {
     )
     expect(res.status).toBe(201)
   })
+
+  it('igdbId non entier → 400', async () => {
+    const res = await POST(
+      jsonRequest('POST', { igdbId: 1.5, personal: { status: 'FINISHED' } }),
+    )
+    expect(res.status).toBe(400)
+  })
+
+  it('IGDB indisponible → 502', async () => {
+    const { getGameById } = await import('@/lib/igdb')
+    vi.mocked(getGameById).mockRejectedValueOnce(new Error('boom'))
+    const res = await POST(
+      jsonRequest('POST', { igdbId: 113112, personal: { status: 'FINISHED' } }),
+    )
+    expect(res.status).toBe(502)
+    expect((await res.json()).error).toMatch(/IGDB/)
+  })
 })
 
 describe('PATCH & DELETE /api/library/:entryId', () => {
@@ -97,5 +114,20 @@ describe('PATCH & DELETE /api/library/:entryId', () => {
     const deleted = await DELETE(new Request('http://test'), { params })
     expect(deleted.status).toBe(204)
     expect(await prisma.libraryEntry.count()).toBe(0)
+  })
+
+  it('PATCH sur un entryId inconnu → 404', async () => {
+    const params = Promise.resolve({ entryId: 'inconnu-123' })
+    const res = await PATCH(
+      jsonRequest('PATCH', { personal: { status: 'FINISHED' } }),
+      { params },
+    )
+    expect(res.status).toBe(404)
+  })
+
+  it('DELETE sur un entryId inconnu → 404', async () => {
+    const params = Promise.resolve({ entryId: 'inconnu-456' })
+    const res = await DELETE(new Request('http://test'), { params })
+    expect(res.status).toBe(404)
   })
 })

@@ -38,41 +38,43 @@ export default async function JeuxPage({
         </p>
       )}
       {view === 'list' ? (
-        <table className="w-full text-sm">
-          <thead className="text-left text-zinc-400">
-            <tr>
-              <th className="p-2"></th>
-              <th className="p-2">Titre</th>
-              <th className="p-2">Note</th>
-              <th className="p-2">Statut</th>
-              <th className="p-2">Plateformes jouées</th>
-              <th className="p-2">Période</th>
-            </tr>
-          </thead>
-          <tbody>
-            {entries.map((entry) => (
-              <tr key={entry.id} className="border-t border-zinc-800 hover:bg-zinc-900">
-                <td className="p-2">
-                  {entry.game.coverUrl && (
-                    <Image src={entry.game.coverUrl} alt="" width={32} height={43} className="rounded" />
-                  )}
-                </td>
-                <td className="p-2">
-                  <Link href={`/jeux/${entry.id}`} className="font-medium hover:text-emerald-400">
-                    {entry.game.title}
-                  </Link>
-                  {entry.game.releaseYear && (
-                    <span className="ml-2 text-zinc-500">{entry.game.releaseYear}</span>
-                  )}
-                </td>
-                <td className="p-2">{entry.rating != null ? `${entry.rating}/10` : '—'}</td>
-                <td className="p-2"><StatusBadge status={entry.status} /></td>
-                <td className="p-2 text-zinc-400">{entry.platformsPlayed.join(', ') || '—'}</td>
-                <td className="p-2 text-zinc-400">{entry.playPeriod ?? '—'}</td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="text-left text-zinc-400">
+              <tr>
+                <th className="p-2"></th>
+                <th className="p-2">Titre</th>
+                <th className="p-2">Note</th>
+                <th className="p-2">Statut</th>
+                <th className="p-2">Plateformes jouées</th>
+                <th className="p-2">Période</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {entries.map((entry) => (
+                <tr key={entry.id} className="border-t border-zinc-800 hover:bg-zinc-900">
+                  <td className="p-2">
+                    {entry.game.coverUrl && (
+                      <Image src={entry.game.coverUrl} alt="" width={32} height={43} className="rounded" />
+                    )}
+                  </td>
+                  <td className="p-2">
+                    <Link href={`/jeux/${entry.id}`} className="font-medium hover:text-emerald-400">
+                      {entry.game.title}
+                    </Link>
+                    {entry.game.releaseYear && (
+                      <span className="ml-2 text-zinc-500">{entry.game.releaseYear}</span>
+                    )}
+                  </td>
+                  <td className="p-2">{entry.rating != null ? `${entry.rating}/10` : '—'}</td>
+                  <td className="p-2"><StatusBadge status={entry.status} /></td>
+                  <td className="p-2 text-zinc-400">{entry.platformsPlayed.join(', ') || '—'}</td>
+                  <td className="p-2 text-zinc-400">{entry.playPeriod ?? '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : (
         <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6">
           {entries.map((entry) => (

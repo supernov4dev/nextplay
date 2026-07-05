@@ -63,6 +63,16 @@ describe('searchGames', () => {
     expect(authCalls).toHaveLength(1)
   })
 
+  it('assainit la requête (guillemets et antislashs retirés) avant envoi à IGDB', async () => {
+    const fetchMock = mockFetch([RAW_GAME])
+    vi.stubGlobal('fetch', fetchMock)
+    await searchGames('zel"da\\')
+    const gameCall = fetchMock.mock.calls.find(([u]) => String(u).includes('/games'))
+    const sentBody = String(gameCall?.[1]?.body)
+    expect(sentBody).toContain('search "zelda";')
+    expect(sentBody).not.toContain('\\')
+  })
+
   it('lève une erreur si IGDB répond en échec', async () => {
     vi.stubGlobal('fetch', vi.fn(async (url: RequestInfo | URL) =>
       String(url).includes('id.twitch.tv')

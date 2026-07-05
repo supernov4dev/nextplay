@@ -11,8 +11,19 @@ export async function POST(req: Request) {
   const personal = validatePersonal(body.personal)
   if (!personal.ok) return NextResponse.json({ error: personal.error }, { status: 400 })
 
-  if (typeof body.igdbId === 'number') {
-    const igdb = await getGameById(body.igdbId)
+  if (body.igdbId !== undefined) {
+    if (!Number.isInteger(body.igdbId))
+      return NextResponse.json({ error: 'igdbId doit être un entier.' }, { status: 400 })
+    let igdb
+    try {
+      igdb = await getGameById(body.igdbId)
+    } catch (err) {
+      console.error('Recherche IGDB en échec :', err)
+      return NextResponse.json(
+        { error: 'IGDB est indisponible — réessayez plus tard.' },
+        { status: 502 },
+      )
+    }
     if (!igdb)
       return NextResponse.json({ error: 'Jeu introuvable sur IGDB.' }, { status: 404 })
     const { entry, created } = await addGameFromIgdb(DEFAULT_USER_ID, igdb, personal.value)
