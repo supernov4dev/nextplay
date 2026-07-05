@@ -8,7 +8,7 @@ const USER = 'test-user'
 function fakeGame(igdbId: number, title: string, year: number, genres: string[]): IgdbGame {
   return {
     igdbId, title, releaseYear: year, genres,
-    coverUrl: null, summary: null, themes: [], platforms: [], igdbRating: null,
+    coverUrl: null, summary: null, themes: [], platforms: [], igdbRating: null, gameType: null,
   }
 }
 

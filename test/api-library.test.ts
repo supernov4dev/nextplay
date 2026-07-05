@@ -6,7 +6,7 @@ vi.mock('@/lib/igdb', () => ({
     id === 113112
       ? {
           igdbId: 113112, title: 'Hades', coverUrl: null, releaseYear: 2020,
-          summary: null, genres: ['RPG'], themes: [], platforms: [], igdbRating: 92,
+          summary: null, genres: ['RPG'], themes: [], platforms: [], igdbRating: 92, gameType: null,
         }
       : null,
   ),

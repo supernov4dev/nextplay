@@ -20,6 +20,7 @@ const HADES: IgdbGame = {
   themes: ['Fantasy'],
   platforms: ['PC (Microsoft Windows)', 'Nintendo Switch'],
   igdbRating: 92.1,
+  gameType: null,
 }
 
 beforeEach(async () => {

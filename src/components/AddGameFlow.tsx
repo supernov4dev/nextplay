@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import type { IgdbGame } from '@/lib/igdb'
 import { GameSearch } from '@/components/GameSearch'
 import { EntryForm, toPersonalPayload, type EntryFormValues } from '@/components/EntryForm'
@@ -102,26 +103,61 @@ export function AddGameFlow() {
       )}
       {error && <p className="rounded bg-red-950 px-3 py-2 text-sm text-red-300">{error}</p>}
 
-      {!selected && !manualMode && (
-        <>
-          <GameSearch onSelect={(g) => { setSelected(g); setFeedback(null); setError(null) }} />
-          <button type="button" onClick={() => { setManualMode(true); setError(null) }} className="text-sm text-zinc-400 hover:text-white">
-            Jeu introuvable ? Créer une fiche manuelle
-          </button>
-        </>
-      )}
+      {/* La recherche reste montée (masquée en CSS) pour conserver la requête
+          et les résultats quand on sélectionne un jeu puis revient en arrière. */}
+      <div className={selected || manualMode ? 'hidden' : 'space-y-4'}>
+        <GameSearch onSelect={(g) => { setSelected(g); setFeedback(null); setError(null) }} />
+        <button type="button" onClick={() => { setManualMode(true); setError(null) }} className="text-sm text-zinc-400 hover:text-white">
+          Jeu introuvable ? Créer une fiche manuelle
+        </button>
+      </div>
 
       {selected && (
-        <div className="space-y-3 rounded border border-zinc-800 p-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold">
-              {selected.title}
-              {selected.releaseYear && <span className="ml-2 text-zinc-500">{selected.releaseYear}</span>}
-            </h2>
-            <button type="button" onClick={() => { setSelected(null); setError(null) }} className="text-sm text-zinc-400 hover:text-white">
-              Changer de jeu
-            </button>
+        <div className="space-y-4 rounded border border-zinc-800 p-4">
+          <button
+            type="button"
+            onClick={() => { setSelected(null); setError(null) }}
+            className="rounded bg-zinc-800 px-3 py-1.5 text-sm font-medium hover:bg-zinc-700"
+          >
+            ← Retour à la recherche
+          </button>
+          <div className="flex gap-4">
+            {selected.coverUrl ? (
+              <Image
+                src={selected.coverUrl}
+                alt={selected.title}
+                width={120}
+                height={170}
+                className="h-fit shrink-0 rounded"
+              />
+            ) : (
+              <div className="flex h-[170px] w-[120px] shrink-0 items-center justify-center rounded bg-zinc-800 p-2 text-center text-xs">
+                {selected.title}
+              </div>
+            )}
+            <div className="min-w-0 space-y-1.5">
+              <h2 className="font-semibold">
+                {selected.title}
+                {selected.releaseYear && <span className="ml-2 font-normal text-zinc-500">{selected.releaseYear}</span>}
+                {selected.gameType && (
+                  <span className="ml-2 rounded bg-zinc-800 px-1.5 py-0.5 text-xs font-normal text-zinc-300">
+                    {selected.gameType}
+                  </span>
+                )}
+              </h2>
+              <p className="text-sm text-zinc-400">
+                {selected.genres.join(', ')}
+                {selected.igdbRating != null && ` · Note IGDB : ${Math.round(selected.igdbRating)}/100`}
+              </p>
+              {selected.platforms.length > 0 && (
+                <p className="text-sm text-zinc-500">Disponible sur : {selected.platforms.join(', ')}</p>
+              )}
+              {selected.summary && (
+                <p className="line-clamp-4 text-sm text-zinc-300">{selected.summary}</p>
+              )}
+            </div>
           </div>
+          <hr className="border-zinc-800" />
           <EntryForm initial={formInitial} submitLabel="Ajouter à ma bibliothèque" onSubmit={submit} busy={busy} />
         </div>
       )}

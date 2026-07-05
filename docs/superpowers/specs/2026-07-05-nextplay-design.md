@@ -132,6 +132,18 @@ Trois portes d'entrée :
 La recherche IGDB interroge l'API en direct et n'écrit rien en base tant qu'aucun jeu
 n'est sélectionné.
 
+Affinements issus des premiers retours d'usage (2026-07-05) :
+- Les résultats de recherche affichent un **badge de type** (Jeu principal, Remake,
+  Portage, DLC, Compilation…) et les **plateformes**, en plus de l'année — IGDB
+  référence chaque édition séparément, ces éléments désambiguïsent (ex. les multiples
+  Final Fantasy VII).
+- L'écran de qualification affiche la **fiche IGDB complète** (jaquette, type, genres,
+  plateformes, note IGDB, résumé) au-dessus du formulaire de vécu.
+- Un bouton **« ← Retour à la recherche »** ramène à la requête et aux résultats en
+  cours (état conservé).
+- Limite connue : les résumés IGDB n'existent qu'en anglais ; une traduction
+  automatique est envisagée avec l'intégration de l'API Claude (recommandations).
+
 ### 5.3 Fiche jeu
 
 Jaquette et métadonnées IGDB d'un côté, vécu personnel de l'autre. Édition inline des
