@@ -14,7 +14,8 @@ export async function GET(req: Request) {
     if (!game)
       return NextResponse.json({ error: 'Jeu introuvable sur IGDB.' }, { status: 404 })
     if (!game.summary) return NextResponse.json({ summary: null })
-    return NextResponse.json({ summary: await translateSummary(igdbId, game.summary) })
+    const result = await translateSummary(igdbId, game.summary)
+    return NextResponse.json({ summary: result.text })
   } catch {
     return NextResponse.json({ error: 'IGDB est indisponible.' }, { status: 502 })
   }

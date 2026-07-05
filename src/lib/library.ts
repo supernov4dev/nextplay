@@ -58,6 +58,7 @@ export async function addGameFromIgdb(
   userId: string,
   igdb: IgdbGame,
   personal: PersonalInput,
+  gameExtras?: { summaryTranslated?: boolean },
 ): Promise<{ entry: LibraryEntry; created: boolean }> {
   const game = await prisma.game.upsert({
     where: { igdbId: igdb.igdbId },
@@ -68,6 +69,7 @@ export async function addGameFromIgdb(
       coverUrl: igdb.coverUrl,
       releaseYear: igdb.releaseYear,
       summary: igdb.summary,
+      summaryTranslated: gameExtras?.summaryTranslated ?? false,
       genres: igdb.genres,
       themes: igdb.themes,
       platforms: igdb.platforms,
