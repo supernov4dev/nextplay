@@ -127,12 +127,13 @@ export function DiscoverDeck() {
     advance() // non persisté : le jeu reviendra dans un prochain deck
   }, [current, busy, advance])
 
+  // Convention type Tinder : ← = non (pas joué), → = oui (joué), ↓ = plus tard
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (!current) return
       if (e.key === 'ArrowRight') played()
-      else if (e.key === 'ArrowLeft') pass()
-      else if (e.key === 'ArrowDown') notPlayed()
+      else if (e.key === 'ArrowLeft') notPlayed()
+      else if (e.key === 'ArrowDown') pass()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -233,30 +234,30 @@ export function DiscoverDeck() {
               type="button"
               onClick={notPlayed}
               disabled={busy}
-              className="rounded-lg bg-red-950 px-4 py-2 text-sm font-medium text-red-300 hover:bg-red-900 disabled:opacity-50"
+              className="flex flex-col items-center rounded-lg bg-red-950 px-4 py-2 text-red-300 hover:bg-red-900 disabled:opacity-50"
             >
-              ✗ Pas joué
+              <span className="text-sm font-medium">✗ Je n&apos;y ai pas joué</span>
+              <span className="text-[10px] opacity-70">touche ← · ne reviendra plus</span>
             </button>
             <button
               type="button"
               onClick={pass}
               disabled={busy}
-              className="rounded-lg bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-700 disabled:opacity-50"
+              className="flex flex-col items-center rounded-lg bg-amber-950 px-4 py-2 text-amber-300 hover:bg-amber-900 disabled:opacity-50"
             >
-              → Passer
+              <span className="text-sm font-medium">🤔 Je ne sais plus</span>
+              <span className="text-[10px] opacity-70">touche ↓ · reviendra plus tard</span>
             </button>
             <button
               type="button"
               onClick={played}
               disabled={busy}
-              className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium hover:bg-emerald-600 disabled:opacity-50"
+              className="flex flex-col items-center rounded-lg bg-emerald-700 px-4 py-2 text-white hover:bg-emerald-600 disabled:opacity-50"
             >
-              ✓ J&apos;y ai joué
+              <span className="text-sm font-medium">✓ J&apos;y ai joué</span>
+              <span className="text-[10px] opacity-80">touche → · ajout « à trier »</span>
             </button>
           </div>
-          <p className="text-center text-xs text-zinc-600">
-            Clavier : ← passer · ↓ pas joué · → j&apos;y ai joué
-          </p>
         </div>
       )}
 
