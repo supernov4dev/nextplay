@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getGameById } from '@/lib/igdb'
 import { addGameFromIgdb, addManualGame } from '@/lib/library'
 import { validatePersonal } from '@/lib/validate'
+import { translateSummary } from '@/lib/translate'
 import { DEFAULT_USER_ID } from '@/lib/user'
 
 export async function POST(req: Request) {
@@ -26,6 +27,8 @@ export async function POST(req: Request) {
     }
     if (!igdb)
       return NextResponse.json({ error: 'Jeu introuvable sur IGDB.' }, { status: 404 })
+    // Résumé stocké en français (cache partagé avec l'écran d'ajout)
+    if (igdb.summary) igdb.summary = await translateSummary(body.igdbId, igdb.summary)
     const { entry, created } = await addGameFromIgdb(DEFAULT_USER_ID, igdb, personal.value)
     return NextResponse.json(
       { entryId: entry.id, created },
