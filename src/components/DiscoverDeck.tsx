@@ -234,30 +234,33 @@ export function DiscoverDeck() {
               type="button"
               onClick={notPlayed}
               disabled={busy}
-              className="flex flex-col items-center rounded-lg bg-red-950 px-4 py-2 text-red-300 hover:bg-red-900 disabled:opacity-50"
+              className="flex items-center gap-2 rounded-md border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:border-red-800 hover:text-red-300 disabled:opacity-50"
             >
-              <span className="text-sm font-medium">✗ Je n&apos;y ai pas joué</span>
-              <span className="text-[10px] opacity-70">touche ← · ne reviendra plus</span>
+              <kbd className="rounded border border-zinc-700 px-1 text-[10px] text-zinc-500">←</kbd>
+              Je n&apos;y ai pas joué
             </button>
             <button
               type="button"
               onClick={pass}
               disabled={busy}
-              className="flex flex-col items-center rounded-lg bg-amber-950 px-4 py-2 text-amber-300 hover:bg-amber-900 disabled:opacity-50"
+              className="flex items-center gap-2 rounded-md border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:border-zinc-500 disabled:opacity-50"
             >
-              <span className="text-sm font-medium">🤔 Je ne sais plus</span>
-              <span className="text-[10px] opacity-70">touche ↓ · reviendra plus tard</span>
+              <kbd className="rounded border border-zinc-700 px-1 text-[10px] text-zinc-500">↓</kbd>
+              Je ne sais plus
             </button>
             <button
               type="button"
               onClick={played}
               disabled={busy}
-              className="flex flex-col items-center rounded-lg bg-emerald-700 px-4 py-2 text-white hover:bg-emerald-600 disabled:opacity-50"
+              className="flex items-center gap-2 rounded-md border border-emerald-800 px-4 py-2 text-sm text-emerald-300 hover:border-emerald-600 hover:bg-emerald-950 disabled:opacity-50"
             >
-              <span className="text-sm font-medium">✓ J&apos;y ai joué</span>
-              <span className="text-[10px] opacity-80">touche → · ajout « à trier »</span>
+              <kbd className="rounded border border-emerald-800 px-1 text-[10px] text-emerald-500">→</kbd>
+              J&apos;y ai joué
             </button>
           </div>
+          <p className="text-center text-xs text-zinc-600">
+            « Pas joué » n&apos;apparaîtra plus · « Je ne sais plus » reviendra plus tard
+          </p>
         </div>
       )}
 
