@@ -2,7 +2,9 @@ import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { getEntryWithGame } from '@/lib/library'
 import { StatusBadge } from '@/components/StatusBadge'
+import { RatingBadge } from '@/components/RatingBadge'
 import { EntryDetail } from '@/components/EntryDetail'
+import { formatPeriods } from '@/lib/periods'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,13 +43,28 @@ export default async function FicheJeuPage({
         </div>
         {entry.game.summary && <p className="text-sm text-zinc-300">{entry.game.summary}</p>}
         <hr className="border-zinc-800" />
-        <div className="space-y-2">
+        <div className="space-y-3">
           <h2 className="font-semibold">Mon vécu</h2>
-          <div className="flex flex-wrap items-center gap-3 text-sm">
-            <StatusBadge status={entry.status} />
-            <span>{entry.rating != null ? `Ma note : ${entry.rating}/10` : 'Pas encore noté'}</span>
+          <div className="flex items-center gap-4">
+            {entry.rating != null ? (
+              <RatingBadge rating={entry.rating} size="lg" />
+            ) : (
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-xs text-zinc-500">
+                Pas noté
+              </div>
+            )}
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusBadge status={entry.status} />
+              {entry.mastered && (
+                <span className="rounded bg-amber-900 px-2 py-0.5 text-xs font-medium text-amber-300">
+                  🏆 Platiné / 100 %
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 text-sm text-zinc-300">
             {entry.platformsPlayed.length > 0 && <span>Joué sur : {entry.platformsPlayed.join(', ')}</span>}
-            {entry.playPeriod && <span>Période : {entry.playPeriod}</span>}
+            {entry.periods.length > 0 && <span>Période(s) : {formatPeriods(entry.periods)}</span>}
             {entry.estimatedHours != null && <span>≈ {entry.estimatedHours} h</span>}
           </div>
           {entry.review && (
@@ -60,9 +77,13 @@ export default async function FicheJeuPage({
             initial={{
               status: entry.status,
               rating: entry.rating?.toString() ?? '',
+              mastered: entry.mastered,
               review: entry.review ?? '',
-              platformsPlayed: entry.platformsPlayed.join(', '),
-              playPeriod: entry.playPeriod ?? '',
+              platformsPlayed: entry.platformsPlayed,
+              periods: entry.periods.map((p) => ({
+                startYear: String(p.startYear),
+                endYear: p.endYear != null ? String(p.endYear) : '',
+              })),
               estimatedHours: entry.estimatedHours?.toString() ?? '',
             }}
           />

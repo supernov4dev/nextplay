@@ -7,6 +7,7 @@ import type { IgdbGame } from '@/lib/igdb'
 import { GameSearch } from '@/components/GameSearch'
 import { EntryForm, toPersonalPayload, type EntryFormValues } from '@/components/EntryForm'
 import { STATUS_OPTIONS } from '@/lib/status'
+import { PLATFORMS, suggestedPlatforms } from '@/lib/platforms'
 
 type Feedback = { kind: 'created' | 'merged'; title: string } | null
 
@@ -17,7 +18,7 @@ export function AddGameFlow() {
   const [manualTitle, setManualTitle] = useState('')
   const [manualYear, setManualYear] = useState('')
   const [serieMode, setSerieMode] = useState(false)
-  const [defaults, setDefaults] = useState({ platformsPlayed: '', status: 'FINISHED' })
+  const [defaults, setDefaults] = useState({ platform: '', status: 'FINISHED' })
   const [busy, setBusy] = useState(false)
   const [feedback, setFeedback] = useState<Feedback>(null)
   const [error, setError] = useState<string | null>(null)
@@ -74,7 +75,10 @@ export function AddGameFlow() {
   }
 
   const formInitial: Partial<EntryFormValues> = serieMode
-    ? { platformsPlayed: defaults.platformsPlayed, status: defaults.status }
+    ? {
+        platformsPlayed: defaults.platform ? [defaults.platform] : [],
+        status: defaults.status,
+      }
     : {}
 
   return (
@@ -87,12 +91,16 @@ export function AddGameFlow() {
         <div className="flex gap-3 rounded border border-zinc-800 bg-zinc-900 p-3 text-sm">
           <label className="flex flex-col gap-1">
             Plateforme par défaut
-            <input
-              value={defaults.platformsPlayed}
-              onChange={(e) => setDefaults((d) => ({ ...d, platformsPlayed: e.target.value }))}
-              placeholder="PS2"
+            <select
+              value={defaults.platform}
+              onChange={(e) => setDefaults((d) => ({ ...d, platform: e.target.value }))}
               className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1"
-            />
+            >
+              <option value="">Aucune</option>
+              {PLATFORMS.map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
           </label>
           <label className="flex flex-col gap-1">
             Statut par défaut
@@ -180,7 +188,13 @@ export function AddGameFlow() {
             </div>
           </div>
           <hr className="border-zinc-800" />
-          <EntryForm initial={formInitial} submitLabel="Ajouter à ma bibliothèque" onSubmit={submit} busy={busy} />
+          <EntryForm
+            initial={formInitial}
+            submitLabel="Ajouter à ma bibliothèque"
+            onSubmit={submit}
+            busy={busy}
+            suggestedPlatforms={suggestedPlatforms(selected.platforms)}
+          />
         </div>
       )}
 

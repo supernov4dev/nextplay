@@ -1,14 +1,20 @@
 import { prisma } from '@/lib/prisma'
-import type { EntryStatus, Game, LibraryEntry } from '@prisma/client'
+import type { EntryStatus, Game, LibraryEntry, PlayPeriod } from '@prisma/client'
 import type { IgdbGame } from '@/lib/igdb'
 import type { LibraryFilters } from '@/lib/filters'
 
+export type PlayPeriodInput = {
+  startYear: number
+  endYear?: number | null // null = année seule
+}
+
 export type PersonalInput = {
   status: EntryStatus
-  rating?: number | null
+  rating?: number | null // note sur 20
+  mastered?: boolean // Platiné / 100 %
   review?: string | null
   platformsPlayed?: string[]
-  playPeriod?: string | null
+  periods?: PlayPeriodInput[]
   estimatedHours?: number | null
 }
 
@@ -45,10 +51,16 @@ async function upsertEntry(
       gameId,
       status: personal.status,
       rating: personal.rating ?? null,
+      mastered: personal.mastered ?? false,
       review: personal.review ?? null,
       platformsPlayed: personal.platformsPlayed ?? [],
-      playPeriod: personal.playPeriod ?? null,
       estimatedHours: personal.estimatedHours ?? null,
+      periods: {
+        create: (personal.periods ?? []).map((p) => ({
+          startYear: p.startYear,
+          endYear: p.endYear ?? null,
+        })),
+      },
     },
   })
   return { entry, created: true }
@@ -103,13 +115,23 @@ export async function updateEntry(
     data: {
       ...(personal.status !== undefined && { status: personal.status }),
       ...(personal.rating !== undefined && { rating: personal.rating }),
+      ...(personal.mastered !== undefined && { mastered: personal.mastered }),
       ...(personal.review !== undefined && { review: personal.review }),
       ...(personal.platformsPlayed !== undefined && {
         platformsPlayed: personal.platformsPlayed,
       }),
-      ...(personal.playPeriod !== undefined && { playPeriod: personal.playPeriod }),
       ...(personal.estimatedHours !== undefined && {
         estimatedHours: personal.estimatedHours,
+      }),
+      // Périodes fournies = remplacement complet
+      ...(personal.periods !== undefined && {
+        periods: {
+          deleteMany: {},
+          create: personal.periods.map((p) => ({
+            startYear: p.startYear,
+            endYear: p.endYear ?? null,
+          })),
+        },
       }),
     },
   })
@@ -122,19 +144,21 @@ export async function deleteEntry(entryId: string): Promise<void> {
   if (remaining === 0) await prisma.game.delete({ where: { id: entry.gameId } })
 }
 
+export type EntryWithGameAndPeriods = LibraryEntry & { game: Game; periods: PlayPeriod[] }
+
 export async function getEntryWithGame(
   entryId: string,
-): Promise<(LibraryEntry & { game: Game }) | null> {
+): Promise<EntryWithGameAndPeriods | null> {
   return prisma.libraryEntry.findUnique({
     where: { id: entryId },
-    include: { game: true },
+    include: { game: true, periods: { orderBy: { startYear: 'asc' } } },
   })
 }
 
 export async function listLibrary(
   userId: string,
   filters: LibraryFilters,
-): Promise<(LibraryEntry & { game: Game })[]> {
+): Promise<EntryWithGameAndPeriods[]> {
   const gameWhere: Record<string, unknown> = {}
   if (filters.genre) gameWhere.genres = { has: filters.genre }
   if (filters.decade !== undefined)
@@ -159,7 +183,7 @@ export async function listLibrary(
       ...(filters.minRating !== undefined && { rating: { gte: filters.minRating } }),
       ...(Object.keys(gameWhere).length > 0 && { game: gameWhere }),
     },
-    include: { game: true },
+    include: { game: true, periods: { orderBy: { startYear: 'asc' } } },
     orderBy,
   })
 }

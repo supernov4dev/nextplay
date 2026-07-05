@@ -18,7 +18,7 @@ beforeEach(async () => {
   await prisma.user.deleteMany()
   await prisma.user.create({ data: { id: USER, name: 'Test' } })
   await addGameFromIgdb(USER, fakeGame(1, 'Final Fantasy VII', 1997, ['RPG']), {
-    status: 'FINISHED', rating: 10, platformsPlayed: ['PlayStation'], playPeriod: '1998',
+    status: 'FINISHED', rating: 20, platformsPlayed: ['PlayStation'], periods: [{ startYear: 1998 }],
   })
   await addGameFromIgdb(USER, fakeGame(2, 'Hades', 2020, ['RPG', 'Roguelike']), {
     status: 'PLAYING', rating: 9, platformsPlayed: ['PC'],
@@ -50,7 +50,7 @@ describe('listLibrary', () => {
 
   it('filtre par note minimale et tri par note', async () => {
     const list = await listLibrary(USER, { sort: 'rating', minRating: 9 })
-    expect(list.map((e) => e.rating)).toEqual([10, 9])
+    expect(list.map((e) => e.rating)).toEqual([20, 9])
   })
 
   it('recherche plein-texte insensible à la casse', async () => {

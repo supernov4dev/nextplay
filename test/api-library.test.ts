@@ -69,7 +69,7 @@ describe('POST /api/library', () => {
     expect((await POST(jsonRequest('POST', { igdbId: 113112, personal: {} }))).status).toBe(400)
     expect(
       (await POST(
-        jsonRequest('POST', { igdbId: 113112, personal: { status: 'FINISHED', rating: 15 } }),
+        jsonRequest('POST', { igdbId: 113112, personal: { status: 'FINISHED', rating: 25 } }),
       )).status,
     ).toBe(400)
   })
