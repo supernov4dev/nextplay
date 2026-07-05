@@ -209,6 +209,24 @@ export function DiscoverDeck() {
             {current.summary && (
               <p className="line-clamp-3 text-sm text-zinc-300">{current.summary}</p>
             )}
+            <p className="flex justify-center gap-4 pt-1 text-xs">
+              <a
+                href={`https://www.google.com/search?udm=2&q=${encodeURIComponent(`${current.title} ${deck!.platform} screenshots`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sky-400 hover:underline"
+              >
+                🔍 Images du jeu
+              </a>
+              <a
+                href={`https://www.youtube.com/results?search_query=${encodeURIComponent(`${current.title} ${deck!.platform} gameplay`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sky-400 hover:underline"
+              >
+                ▶ Gameplay YouTube
+              </a>
+            </p>
           </div>
           <div className="flex justify-center gap-2">
             <button
