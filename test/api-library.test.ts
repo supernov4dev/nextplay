@@ -13,6 +13,10 @@ vi.mock('@/lib/igdb', () => ({
   searchGames: vi.fn(async () => []),
 }))
 
+vi.mock('@/lib/translate', () => ({
+  translateSummary: vi.fn(async (_igdbId: number, text: string) => text),
+}))
+
 import { POST } from '@/app/api/library/route'
 import { PATCH, DELETE } from '@/app/api/library/[entryId]/route'
 

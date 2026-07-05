@@ -21,6 +21,23 @@ export function AddGameFlow() {
   const [busy, setBusy] = useState(false)
   const [feedback, setFeedback] = useState<Feedback>(null)
   const [error, setError] = useState<string | null>(null)
+  // Résumé traduit en français, associé à son igdbId pour ignorer les
+  // réponses tardives quand l'utilisateur change de jeu.
+  const [frSummary, setFrSummary] = useState<{ igdbId: number; text: string } | null>(null)
+
+  function selectGame(g: IgdbGame) {
+    setSelected(g)
+    setFeedback(null)
+    setError(null)
+    if (g.summary) {
+      fetch(`/api/igdb/summary-fr?igdbId=${g.igdbId}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.summary) setFrSummary({ igdbId: g.igdbId, text: data.summary })
+        })
+        .catch(() => {}) // en cas d'échec, le résumé anglais reste affiché
+    }
+  }
 
   async function submit(values: EntryFormValues) {
     setBusy(true)
@@ -106,7 +123,7 @@ export function AddGameFlow() {
       {/* La recherche reste montée (masquée en CSS) pour conserver la requête
           et les résultats quand on sélectionne un jeu puis revient en arrière. */}
       <div className={selected || manualMode ? 'hidden' : 'space-y-4'}>
-        <GameSearch onSelect={(g) => { setSelected(g); setFeedback(null); setError(null) }} />
+        <GameSearch onSelect={selectGame} />
         <button type="button" onClick={() => { setManualMode(true); setError(null) }} className="text-sm text-zinc-400 hover:text-white">
           Jeu introuvable ? Créer une fiche manuelle
         </button>
@@ -153,7 +170,12 @@ export function AddGameFlow() {
                 <p className="text-sm text-zinc-500">Disponible sur : {selected.platforms.join(', ')}</p>
               )}
               {selected.summary && (
-                <p className="line-clamp-4 text-sm text-zinc-300">{selected.summary}</p>
+                <p className="line-clamp-4 text-sm text-zinc-300">
+                  {frSummary?.igdbId === selected.igdbId ? frSummary.text : selected.summary}
+                  {frSummary?.igdbId !== selected.igdbId && (
+                    <span className="ml-2 text-xs text-zinc-500">(traduction en cours…)</span>
+                  )}
+                </p>
               )}
             </div>
           </div>
