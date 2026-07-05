@@ -4,7 +4,9 @@ import { listLibrary } from '@/lib/library'
 import { parseFilters } from '@/lib/filters'
 import { DEFAULT_USER_ID } from '@/lib/user'
 import { StatusBadge } from '@/components/StatusBadge'
+import { RatingBadge } from '@/components/RatingBadge'
 import { LibraryFilterBar } from '@/components/LibraryFilterBar'
+import { formatPeriods } from '@/lib/periods'
 
 export const dynamic = 'force-dynamic'
 
@@ -66,10 +68,17 @@ export default async function JeuxPage({
                       <span className="ml-2 text-zinc-500">{entry.game.releaseYear}</span>
                     )}
                   </td>
-                  <td className="p-2">{entry.rating != null ? `${entry.rating}/10` : '—'}</td>
-                  <td className="p-2"><StatusBadge status={entry.status} /></td>
+                  <td className="p-2">
+                    {entry.rating != null ? <RatingBadge rating={entry.rating} /> : '—'}
+                  </td>
+                  <td className="p-2">
+                    <StatusBadge status={entry.status} />
+                    {entry.mastered && <span className="ml-1" title="Platiné / 100 %">🏆</span>}
+                  </td>
                   <td className="p-2 text-zinc-400">{entry.platformsPlayed.join(', ') || '—'}</td>
-                  <td className="p-2 text-zinc-400">{entry.playPeriod ?? '—'}</td>
+                  <td className="p-2 text-zinc-400">
+                    {entry.periods.length > 0 ? formatPeriods(entry.periods) : '—'}
+                  </td>
                 </tr>
               ))}
             </tbody>

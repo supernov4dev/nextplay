@@ -87,10 +87,16 @@ Navigateur (PC / mobile)
   sollicite plus IGDB.
 - **`LibraryEntry`** — le vécu de l'utilisateur sur un jeu (cœur du projet) :
   `userId` + `gameId` (unique ensemble), **statut** (terminé / en cours / abandonné /
-  en pause / souhaité / à trier), **note** sur 10, **avis** texte, **plateformes
-  jouées** (liste — distinctes des plateformes où le jeu existe), **période de jeu**
-  (année(s) ou texte libre, précision variable selon les souvenirs), **heures
-  estimées**, **source** (`manual` | `steam`), temps de jeu Steam réel si disponible.
+  en pause / souhaité / à trier), **note sur 20** (entier, affichée en badge coloré
+  type Metacritic), **platiné / 100 %** (booléen indépendant du statut, badge 🏆),
+  **avis** texte, **plateformes jouées** (vocabulaire fermé défini dans
+  `src/lib/platforms.ts` — puces cliquables, plateformes du jeu selon IGDB
+  pré-suggérées), **heures estimées**, **source** (`manual` | `steam`), temps de jeu
+  Steam réel si disponible.
+- **`PlayPeriod`** — périodes de jeu structurées, plusieurs par entrée : chaque
+  période est une année seule ou une plage d'années (`startYear`, `endYear?`).
+  Remplace l'ancien texte libre (révision du 2026-07-05, retours d'usage) —
+  exploitable pour la frise chronologique et les recommandations.
 - **`Recommendation`** — historique des recommandations : envie exprimée (texte +
   types), jeux suggérés, justifications du LLM, réaction de l'utilisateur
   (*intéressé* / *déjà joué* / *pas pour moi*). Ce feedback nourrit les recos suivantes.

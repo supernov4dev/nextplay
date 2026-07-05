@@ -48,20 +48,31 @@ enum EntrySource {
 
 // Le vécu de l'utilisateur sur un jeu — le cœur du projet.
 model LibraryEntry {
-  id              String      @id @default(cuid())
+  id              String       @id @default(cuid())
   userId          String
   gameId          String
   status          EntryStatus
-  rating          Int?        // note personnelle sur 10
-  review          String?     // avis personnel
-  platformsPlayed String[]    @default([]) // plateformes où J'AI joué
-  playPeriod      String?     // "2003", "vers 2010", "2019-2021"…
+  rating          Int?         // note personnelle sur 20
+  mastered        Boolean      @default(false) // Platiné / 100 %
+  review          String?      // avis personnel
+  platformsPlayed String[]     @default([]) // plateformes où J'AI joué (vocabulaire fermé, cf. src/lib/platforms.ts)
   estimatedHours  Int?
-  source          EntrySource @default(MANUAL)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  user            User        @relation(fields: [userId], references: [id])
-  game            Game        @relation(fields: [gameId], references: [id])
+  source          EntrySource  @default(MANUAL)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  user            User         @relation(fields: [userId], references: [id])
+  game            Game         @relation(fields: [gameId], references: [id])
+  periods         PlayPeriod[]
 
   @@unique([userId, gameId]) // anti-duplication : une entrée par jeu et par utilisateur
+}
+
+// Une période où le jeu a été joué : année seule (endYear null) ou plage.
+// Plusieurs périodes par entrée (jeu refait à des années d'intervalle).
+model PlayPeriod {
+  id        String       @id @default(cuid())
+  entryId   String
+  startYear Int
+  endYear   Int?
+  entry     LibraryEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
 }

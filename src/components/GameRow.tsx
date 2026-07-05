@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import type { EntryWithGame } from '@/lib/dashboard'
+import { RatingBadge } from '@/components/RatingBadge'
 
 export function GameRow({ title, entries, emptyText }: {
   title: string
@@ -25,7 +26,10 @@ export function GameRow({ title, entries, emptyText }: {
                 </div>
               )}
               <p className="mt-1 truncate text-xs text-zinc-300">{entry.game.title}</p>
-              {entry.rating != null && <p className="text-xs text-emerald-400">{entry.rating}/10</p>}
+              <p className="mt-0.5 flex items-center gap-1">
+                {entry.rating != null && <RatingBadge rating={entry.rating} />}
+                {entry.mastered && <span title="Platiné / 100 %">🏆</span>}
+              </p>
             </Link>
           ))}
         </div>

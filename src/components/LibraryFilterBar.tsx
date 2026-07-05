@@ -1,4 +1,5 @@
 import { STATUS_OPTIONS } from '@/lib/status'
+import { PLATFORMS } from '@/lib/platforms'
 import type { LibraryFilters } from '@/lib/filters'
 
 const DECADES = [1980, 1990, 2000, 2010, 2020]
@@ -33,7 +34,12 @@ export function LibraryFilterBar({
       </label>
       <label className="flex flex-col gap-1">
         Plateforme jouée
-        <input name="platform" defaultValue={filters.platform ?? ''} placeholder="PC, PS2…" className="rounded border border-zinc-700 bg-zinc-900 px-2 py-1" />
+        <select name="platform" defaultValue={filters.platform ?? ''} className="rounded border border-zinc-700 bg-zinc-900 px-2 py-1">
+          <option value="">Toutes</option>
+          {PLATFORMS.map((p) => (
+            <option key={p} value={p}>{p}</option>
+          ))}
+        </select>
       </label>
       <label className="flex flex-col gap-1">
         Genre
@@ -49,8 +55,8 @@ export function LibraryFilterBar({
         </select>
       </label>
       <label className="flex flex-col gap-1">
-        Note min.
-        <input name="minRating" type="number" min={0} max={10} defaultValue={filters.minRating ?? ''} className="w-16 rounded border border-zinc-700 bg-zinc-900 px-2 py-1" />
+        Note min. (/20)
+        <input name="minRating" type="number" min={0} max={20} defaultValue={filters.minRating ?? ''} className="w-16 rounded border border-zinc-700 bg-zinc-900 px-2 py-1" />
       </label>
       <label className="flex flex-col gap-1">
         Tri
