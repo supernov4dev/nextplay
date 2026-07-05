@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NextPlay
 
-## Getting Started
+Bibliothèque de jeux vidéo personnelle : tous les jeux d'une vie de joueur, avec
+notes et avis, et à terme des recommandations ciblées (« à quoi jouer ? »).
 
-First, run the development server:
+Spec et plans : `docs/superpowers/`.
+
+## Démarrage
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run db:up      # Postgres de dev (Docker)
+npm run dev        # → http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Variables d'environnement : copier `.env.example` en `.env` et renseigner les
+clés IGDB (app à créer sur https://dev.twitch.tv/console/apps).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts utiles
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Commande | Rôle |
+|---|---|
+| `npm run dev` | Serveur de développement |
+| `npm test` | Suite de tests (Vitest — nécessite la base de dev démarrée) |
+| `npm run translate:fr` | Traduit en français les résumés de jeux pas encore traduits, via Claude Code (`claude -p`, couvert par l'abonnement) |
+| `npm run db:up` / `db:down` | Démarre / arrête le Postgres de dev |
+| `npx prisma migrate dev` | Applique/crée une migration (puis voir ⚠ ci-dessous) |
+| `npm run db:push:test` | Synchronise le schéma sur la base de test |
 
-## Learn More
+## Dépannage
 
-To learn more about Next.js, take a look at the following resources:
+**« Unknown argument … » (PrismaClientValidationError) après une migration**,
+ou « Unexpected end of JSON input » dans l'interface : le cache persistant de
+Turbopack (`.next/`) sert encore l'ancien client Prisma. Correctif :
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# arrêter le serveur dev, puis
+rm -rf .next
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+À faire après chaque `prisma migrate dev` / `prisma generate` si le schéma a
+changé depuis le dernier démarrage du serveur.
