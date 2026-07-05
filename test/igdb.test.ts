@@ -12,10 +12,12 @@ const RAW_GAME = {
   genres: [{ name: 'Role-playing (RPG)' }],
   themes: [{ name: 'Fantasy' }],
   platforms: [{ name: 'PC (Microsoft Windows)' }, { name: 'PlayStation 4' }],
+  game_type: { id: 0, type: 'Main Game' },
 }
 
 function mockFetch(gameResults: unknown[]) {
-  return vi.fn(async (url: RequestInfo | URL) => {
+  return vi.fn(async (url: RequestInfo | URL, init?: RequestInit) => {
+    void init // capturé dans mock.calls pour inspecter le body envoyé
     if (String(url).includes('id.twitch.tv')) {
       return new Response(JSON.stringify(TOKEN_RESPONSE), { status: 200 })
     }
@@ -40,7 +42,23 @@ describe('searchGames', () => {
       themes: ['Fantasy'],
       platforms: ['PC (Microsoft Windows)', 'PlayStation 4'],
       igdbRating: 93.4,
+      gameType: 'Jeu principal',
     })
+  })
+
+  it('traduit les types de jeu connus et laisse les inconnus tels quels', async () => {
+    vi.stubGlobal(
+      'fetch',
+      mockFetch([
+        { id: 1, name: 'A', game_type: { id: 11, type: 'Port' } },
+        { id: 2, name: 'B', game_type: { id: 3, type: 'Bundle' } },
+        { id: 3, name: 'C', game_type: { id: 99, type: 'Type Inconnu' } },
+      ]),
+    )
+    const [a, b, c] = await searchGames('x')
+    expect(a.gameType).toBe('Portage')
+    expect(b.gameType).toBe('Compilation')
+    expect(c.gameType).toBe('Type Inconnu')
   })
 
   it('tolère les champs absents (jaquette, date, genres...)', async () => {
@@ -50,6 +68,7 @@ describe('searchGames', () => {
     expect(game.releaseYear).toBeNull()
     expect(game.genres).toEqual([])
     expect(game.igdbRating).toBeNull()
+    expect(game.gameType).toBeNull()
   })
 
   it("réutilise le token entre deux appels (une seule requête d'auth)", async () => {

@@ -54,10 +54,20 @@ export function GameSearch({ onSelect }: { onSelect: (game: IgdbGame) => void })
               ) : (
                 <div className="h-[53px] w-[40px] rounded bg-zinc-800" />
               )}
-              <span>
+              <span className="min-w-0">
                 <span className="font-medium">{game.title}</span>
                 {game.releaseYear && <span className="ml-2 text-zinc-500">{game.releaseYear}</span>}
-                <span className="block text-xs text-zinc-500">{game.genres.join(', ')}</span>
+                {game.gameType && (
+                  <span className="ml-2 rounded bg-zinc-800 px-1.5 py-0.5 text-xs text-zinc-300">
+                    {game.gameType}
+                  </span>
+                )}
+                <span className="block truncate text-xs text-zinc-500">{game.genres.join(', ')}</span>
+                {game.platforms.length > 0 && (
+                  <span className="block truncate text-xs text-zinc-600">
+                    {game.platforms.join(' · ')}
+                  </span>
+                )}
               </span>
             </button>
           </li>

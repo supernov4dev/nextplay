@@ -5,7 +5,27 @@
 const TOKEN_URL = 'https://id.twitch.tv/oauth2/token'
 const API_URL = 'https://api.igdb.com/v4'
 const GAME_FIELDS =
-  'fields name, summary, first_release_date, total_rating, cover.image_id, genres.name, themes.name, platforms.name;'
+  'fields name, summary, first_release_date, total_rating, cover.image_id, genres.name, themes.name, platforms.name, game_type.type;'
+
+// Types IGDB (game_type.type) → libellés français. Un type inconnu est
+// affiché tel quel plutôt que masqué.
+const GAME_TYPE_LABELS: Record<string, string> = {
+  'Main Game': 'Jeu principal',
+  'DLC Addon': 'DLC',
+  Expansion: 'Extension',
+  Bundle: 'Compilation',
+  'Standalone Expansion': 'Extension autonome',
+  Mod: 'Mod',
+  Episode: 'Épisode',
+  Season: 'Saison',
+  Remake: 'Remake',
+  Remaster: 'Remaster',
+  'Expanded Game': 'Version étendue',
+  Port: 'Portage',
+  Fork: 'Fork',
+  Pack: 'Pack',
+  Update: 'Mise à jour',
+}
 
 export type IgdbGame = {
   igdbId: number
@@ -17,6 +37,7 @@ export type IgdbGame = {
   themes: string[]
   platforms: string[]
   igdbRating: number | null
+  gameType: string | null
 }
 
 let cachedToken: { value: string; expiresAt: number } | null = null
@@ -53,6 +74,7 @@ type RawGame = {
   genres?: { name: string }[]
   themes?: { name: string }[]
   platforms?: { name: string }[]
+  game_type?: { type: string }
 }
 
 function toIgdbGame(raw: RawGame): IgdbGame {
@@ -70,6 +92,9 @@ function toIgdbGame(raw: RawGame): IgdbGame {
     themes: (raw.themes ?? []).map((t) => t.name),
     platforms: (raw.platforms ?? []).map((p) => p.name),
     igdbRating: raw.total_rating ?? null,
+    gameType: raw.game_type?.type
+      ? (GAME_TYPE_LABELS[raw.game_type.type] ?? raw.game_type.type)
+      : null,
   }
 }
 

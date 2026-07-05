@@ -9,7 +9,7 @@ const USER = 'test-user'
 function fakeGame(igdbId: number, title: string): IgdbGame {
   return {
     igdbId, title, releaseYear: 2020, genres: [],
-    coverUrl: null, summary: null, themes: [], platforms: [], igdbRating: null,
+    coverUrl: null, summary: null, themes: [], platforms: [], igdbRating: null, gameType: null,
   }
 }
 
