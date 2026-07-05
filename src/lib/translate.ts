@@ -17,15 +17,22 @@ export function resetTranslationCache(): void {
   cache.clear()
 }
 
+export type TranslationResult = {
+  text: string
+  // false = texte original conservé (pas de clé, échec, texte vide) →
+  // le jeu reste candidat au batch `npm run translate:fr`
+  translated: boolean
+}
+
 export async function translateSummary(
   igdbId: number,
   summary: string,
-): Promise<string> {
-  if (!summary.trim()) return summary
-  if (!process.env.ANTHROPIC_API_KEY) return summary
+): Promise<TranslationResult> {
+  if (!summary.trim()) return { text: summary, translated: false }
+  if (!process.env.ANTHROPIC_API_KEY) return { text: summary, translated: false }
 
   const cached = cache.get(igdbId)
-  if (cached) return cached
+  if (cached) return { text: cached, translated: true }
 
   try {
     const client = new Anthropic()
@@ -36,12 +43,13 @@ export async function translateSummary(
       messages: [{ role: 'user', content: summary }],
     })
     const block = response.content[0]
-    if (!block || block.type !== 'text' || !block.text.trim()) return summary
+    if (!block || block.type !== 'text' || !block.text.trim())
+      return { text: summary, translated: false }
     const translated = block.text.trim()
     cache.set(igdbId, translated)
-    return translated
+    return { text: translated, translated: true }
   } catch (err) {
     console.error('Traduction du résumé en échec :', err)
-    return summary
+    return { text: summary, translated: false }
   }
 }

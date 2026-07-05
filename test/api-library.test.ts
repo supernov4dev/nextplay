@@ -14,7 +14,10 @@ vi.mock('@/lib/igdb', () => ({
 }))
 
 vi.mock('@/lib/translate', () => ({
-  translateSummary: vi.fn(async (_igdbId: number, text: string) => text),
+  translateSummary: vi.fn(async (_igdbId: number, text: string) => ({
+    text,
+    translated: false,
+  })),
 }))
 
 import { POST } from '@/app/api/library/route'

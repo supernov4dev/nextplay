@@ -27,9 +27,17 @@ export async function POST(req: Request) {
     }
     if (!igdb)
       return NextResponse.json({ error: 'Jeu introuvable sur IGDB.' }, { status: 404 })
-    // Résumé stocké en français (cache partagé avec l'écran d'ajout)
-    if (igdb.summary) igdb.summary = await translateSummary(body.igdbId, igdb.summary)
-    const { entry, created } = await addGameFromIgdb(DEFAULT_USER_ID, igdb, personal.value)
+    // Résumé stocké en français si l'API est disponible ; sinon il reste en
+    // anglais et le batch `npm run translate:fr` le rattrapera.
+    let summaryTranslated = false
+    if (igdb.summary) {
+      const result = await translateSummary(body.igdbId, igdb.summary)
+      igdb.summary = result.text
+      summaryTranslated = result.translated
+    }
+    const { entry, created } = await addGameFromIgdb(DEFAULT_USER_ID, igdb, personal.value, {
+      summaryTranslated,
+    })
     return NextResponse.json(
       { entryId: entry.id, created },
       { status: created ? 201 : 200 },

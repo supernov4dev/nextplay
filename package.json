@@ -11,7 +11,8 @@
     "db:down": "docker compose -f docker-compose.dev.yml down",
     "db:push:test": "DATABASE_URL=postgresql://nextplay:nextplay@localhost:5432/nextplay_test prisma db push --skip-generate",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "translate:fr": "tsx scripts/translate-summaries.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

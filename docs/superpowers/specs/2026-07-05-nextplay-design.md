@@ -141,8 +141,11 @@ Affinements issus des premiers retours d'usage (2026-07-05) :
   plateformes, note IGDB, résumé) au-dessus du formulaire de vécu.
 - Un bouton **« ← Retour à la recherche »** ramène à la requête et aux résultats en
   cours (état conservé).
-- Limite connue : les résumés IGDB n'existent qu'en anglais ; une traduction
-  automatique est envisagée avec l'intégration de l'API Claude (recommandations).
+- Limite connue : les résumés IGDB n'existent qu'en anglais. Traduction en
+  français par lot via Claude Code non-interactif (`npm run translate:fr`,
+  couvert par l'abonnement — contrainte : pas de dépense API). Le champ
+  `Game.summaryTranslated` trace ce qui reste à traduire. Un chemin API Claude
+  temps réel existe mais reste dormant sans `ANTHROPIC_API_KEY`.
 
 ### 5.3 Fiche jeu
 
