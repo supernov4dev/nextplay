@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import type { EntryStatus, Game, LibraryEntry } from '@prisma/client'
 import type { IgdbGame } from '@/lib/igdb'
+import type { LibraryFilters } from '@/lib/filters'
 
 export type PersonalInput = {
   status: EntryStatus
@@ -125,5 +126,38 @@ export async function getEntryWithGame(
   return prisma.libraryEntry.findUnique({
     where: { id: entryId },
     include: { game: true },
+  })
+}
+
+export async function listLibrary(
+  userId: string,
+  filters: LibraryFilters,
+): Promise<(LibraryEntry & { game: Game })[]> {
+  const gameWhere: Record<string, unknown> = {}
+  if (filters.genre) gameWhere.genres = { has: filters.genre }
+  if (filters.decade !== undefined)
+    gameWhere.releaseYear = { gte: filters.decade, lt: filters.decade + 10 }
+  if (filters.search)
+    gameWhere.title = { contains: filters.search, mode: 'insensitive' }
+
+  const orderBy =
+    filters.sort === 'title'
+      ? { game: { title: 'asc' as const } }
+      : filters.sort === 'rating'
+        ? { rating: { sort: 'desc' as const, nulls: 'last' as const } }
+        : filters.sort === 'releaseYear'
+          ? { game: { releaseYear: { sort: 'desc' as const, nulls: 'last' as const } } }
+          : { createdAt: 'desc' as const }
+
+  return prisma.libraryEntry.findMany({
+    where: {
+      userId,
+      ...(filters.status && { status: filters.status }),
+      ...(filters.platform && { platformsPlayed: { has: filters.platform } }),
+      ...(filters.minRating !== undefined && { rating: { gte: filters.minRating } }),
+      ...(Object.keys(gameWhere).length > 0 && { game: gameWhere }),
+    },
+    include: { game: true },
+    orderBy,
   })
 }
