@@ -153,6 +153,19 @@ Affinements issus des premiers retours d'usage (2026-07-05) :
   `Game.summaryTranslated` trace ce qui reste à traduire. Un chemin API Claude
   temps réel existe mais reste dormant sans `ANTHROPIC_API_KEY`.
 
+### 5.2 bis Découvrir (ajout par suggestion — révision du 2026-07-05)
+
+Page « Découvrir » : constitution rapide de la bibliothèque façon « match ».
+On choisit une plateforme (+ décennie optionnelle) ; les jeux principaux IGDB
+défilent en cartes, du plus connu au plus obscur (tri par nombre de votes).
+Trois actions (boutons + clavier) :
+- **« J'y ai joué »** → ajout en statut « À trier », plateforme pré-remplie
+  (qualification différée via la file de triage) ;
+- **« Je n'y ai pas joué »** → exclusion définitive des prochains decks
+  (table `DiscoveryExclusion`) ;
+- **« Passer »** → non persisté, le jeu réapparaîtra dans un prochain deck.
+Les jeux déjà en bibliothèque sont exclus du deck.
+
 ### 5.3 Fiche jeu
 
 Jaquette et métadonnées IGDB d'un côté, vécu personnel de l'autre. Édition inline des

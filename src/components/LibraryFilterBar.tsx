@@ -59,12 +59,17 @@ export function LibraryFilterBar({
         <input name="minRating" type="number" min={0} max={20} defaultValue={filters.minRating ?? ''} className="w-16 rounded border border-zinc-700 bg-zinc-900 px-2 py-1" />
       </label>
       <label className="flex flex-col gap-1">
+        Heures min.
+        <input name="minHours" type="number" min={0} defaultValue={filters.minHours ?? ''} className="w-16 rounded border border-zinc-700 bg-zinc-900 px-2 py-1" />
+      </label>
+      <label className="flex flex-col gap-1">
         Tri
         <select name="sort" defaultValue={filters.sort} className="rounded border border-zinc-700 bg-zinc-900 px-2 py-1">
           <option value="recent">Ajout récent</option>
           <option value="title">Titre</option>
           <option value="rating">Note</option>
           <option value="releaseYear">Année de sortie</option>
+          <option value="hours">Temps de jeu</option>
         </select>
       </label>
       <button type="submit" className="rounded bg-emerald-700 px-3 py-1.5 font-medium hover:bg-emerald-600">

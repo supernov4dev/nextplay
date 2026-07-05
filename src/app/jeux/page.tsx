@@ -50,6 +50,7 @@ export default async function JeuxPage({
                 <th className="p-2">Statut</th>
                 <th className="p-2">Plateformes jouées</th>
                 <th className="p-2">Période</th>
+                <th className="p-2">Heures</th>
               </tr>
             </thead>
             <tbody>
@@ -78,6 +79,9 @@ export default async function JeuxPage({
                   <td className="p-2 text-zinc-400">{entry.platformsPlayed.join(', ') || '—'}</td>
                   <td className="p-2 text-zinc-400">
                     {entry.periods.length > 0 ? formatPeriods(entry.periods) : '—'}
+                  </td>
+                  <td className="p-2 text-zinc-400">
+                    {entry.estimatedHours != null ? `≈ ${entry.estimatedHours} h` : '—'}
                   </td>
                 </tr>
               ))}

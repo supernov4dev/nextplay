@@ -64,6 +64,43 @@ const IGDB_TO_PLATFORM: Record<string, Platform> = {
   iOS: 'Mobile',
 }
 
+// Nos plateformes → IDs de plateformes IGDB (pour la page Découvrir).
+// Certaines couvrent plusieurs IDs (versions régionales).
+const PLATFORM_TO_IGDB_IDS: Record<string, number[]> = {
+  PC: [6],
+  PlayStation: [7],
+  'PlayStation 2': [8],
+  'PlayStation 3': [9],
+  'PlayStation 4': [48],
+  'PlayStation 5': [167],
+  PSP: [38],
+  'PS Vita': [46],
+  Xbox: [11],
+  'Xbox 360': [12],
+  'Xbox One': [49],
+  'Xbox Series': [169],
+  NES: [18, 99], // NES + Famicom
+  'Super Nintendo': [19, 58], // SNES + Super Famicom
+  'Nintendo 64': [4],
+  GameCube: [21],
+  Wii: [5],
+  'Wii U': [41],
+  Switch: [130],
+  'Game Boy': [33, 22], // GB + GB Color
+  'Game Boy Advance': [24],
+  DS: [20],
+  '3DS': [37, 137],
+  'Master System': [64],
+  'Mega Drive': [29],
+  Saturn: [32],
+  Dreamcast: [23],
+  Mobile: [34, 39], // Android + iOS
+}
+
+export function igdbPlatformIds(platform: string): number[] {
+  return PLATFORM_TO_IGDB_IDS[platform] ?? []
+}
+
 const KNOWN = new Set<string>(PLATFORMS)
 
 export function suggestedPlatforms(igdbPlatforms: string[]): Platform[] {

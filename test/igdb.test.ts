@@ -102,6 +102,34 @@ describe('searchGames', () => {
   })
 })
 
+describe('discoverGames', () => {
+  it('interroge IGDB par plateforme, jeux principaux, triés par popularité', async () => {
+    const fetchMock = mockFetch([RAW_GAME])
+    vi.stubGlobal('fetch', fetchMock)
+    const { discoverGames } = await import('@/lib/igdb')
+    const results = await discoverGames({ platformIds: [7, 8], offset: 40 })
+    expect(results).toHaveLength(1)
+    const gameCall = fetchMock.mock.calls.find(([u]) => String(u).includes('/games'))
+    const body = String(gameCall?.[1]?.body)
+    expect(body).toContain('where platforms = (7,8) & game_type = 0')
+    expect(body).toContain('sort total_rating_count desc')
+    expect(body).toContain('offset 40')
+  })
+
+  it('ajoute le filtre de décennie quand fourni', async () => {
+    const fetchMock = mockFetch([])
+    vi.stubGlobal('fetch', fetchMock)
+    const { discoverGames } = await import('@/lib/igdb')
+    await discoverGames({ platformIds: [7], decade: 1990, offset: 0 })
+    const body = String(
+      fetchMock.mock.calls.find(([u]) => String(u).includes('/games'))?.[1]?.body,
+    )
+    // bornes UNIX de la décennie 1990-1999
+    expect(body).toContain(`first_release_date >= ${Date.UTC(1990, 0, 1) / 1000}`)
+    expect(body).toContain(`first_release_date < ${Date.UTC(2000, 0, 1) / 1000}`)
+  })
+})
+
 describe('getGameById', () => {
   it('retourne le jeu si trouvé', async () => {
     vi.stubGlobal('fetch', mockFetch([RAW_GAME]))

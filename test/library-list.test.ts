@@ -18,10 +18,10 @@ beforeEach(async () => {
   await prisma.user.deleteMany()
   await prisma.user.create({ data: { id: USER, name: 'Test' } })
   await addGameFromIgdb(USER, fakeGame(1, 'Final Fantasy VII', 1997, ['RPG']), {
-    status: 'FINISHED', rating: 20, platformsPlayed: ['PlayStation'], periods: [{ startYear: 1998 }],
+    status: 'FINISHED', rating: 20, platformsPlayed: ['PlayStation'], periods: [{ startYear: 1998 }], estimatedHours: 60,
   })
   await addGameFromIgdb(USER, fakeGame(2, 'Hades', 2020, ['RPG', 'Roguelike']), {
-    status: 'PLAYING', rating: 9, platformsPlayed: ['PC'],
+    status: 'PLAYING', rating: 9, platformsPlayed: ['PC'], estimatedHours: 120,
   })
   await addGameFromIgdb(USER, fakeGame(3, 'Gran Turismo', 1997, ['Course']), {
     status: 'TO_SORT', platformsPlayed: ['PlayStation'],
@@ -63,5 +63,19 @@ describe('listLibrary', () => {
     expect(list.map((e) => e.game.title)).toEqual([
       'Final Fantasy VII', 'Gran Turismo', 'Hades',
     ])
+  })
+})
+
+describe('listLibrary — temps de jeu', () => {
+  it('tri par heures décroissantes, sans-heures en dernier', async () => {
+    const list = await listLibrary(USER, { sort: 'hours' })
+    expect(list.map((e) => e.game.title)).toEqual([
+      'Hades', 'Final Fantasy VII', 'Gran Turismo',
+    ])
+  })
+
+  it('filtre par heures minimales', async () => {
+    const list = await listLibrary(USER, { sort: 'recent', minHours: 100 })
+    expect(list.map((e) => e.game.title)).toEqual(['Hades'])
   })
 })
