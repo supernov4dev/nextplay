@@ -1,0 +1,15 @@
+# Postgres de développement local (le déploiement réel est sur k3s, plan 4)
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: nextplay
+      POSTGRES_PASSWORD: nextplay
+      POSTGRES_DB: nextplay
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./docker/dev-init.sql:/docker-entrypoint-initdb.d/dev-init.sql:ro
+volumes:
+  db-data:
