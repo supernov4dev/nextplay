@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id      String         @id
+  name    String
+  entries LibraryEntry[]
+}
+
+// Fiche "objective" d'un jeu — cache local des métadonnées IGDB.
+// Seuls les jeux ajoutés à la bibliothèque existent ici (jamais un miroir d'IGDB).
+model Game {
+  id          String         @id @default(cuid())
+  igdbId      Int?           @unique // null = fiche créée manuellement
+  title       String
+  coverUrl    String?
+  releaseYear Int?
+  summary     String?
+  genres      String[]       @default([])
+  themes      String[]       @default([])
+  platforms   String[]       @default([]) // plateformes où le jeu EXISTE (IGDB)
+  igdbRating  Float?         // note agrégée IGDB (0-100)
+  createdAt   DateTime       @default(now())
+  entries     LibraryEntry[]
+}
+
+enum EntryStatus {
+  FINISHED // Terminé
+  PLAYING  // En cours
+  DROPPED  // Abandonné
+  PAUSED   // En pause
+  WISHLIST // Souhaité
+  TO_SORT  // À trier (imports)
+}
+
+enum EntrySource {
+  MANUAL
+  STEAM
+}
+
+// Le vécu de l'utilisateur sur un jeu — le cœur du projet.
+model LibraryEntry {
+  id              String      @id @default(cuid())
+  userId          String
+  gameId          String
+  status          EntryStatus
+  rating          Int?        // note personnelle sur 10
+  review          String?     // avis personnel
+  platformsPlayed String[]    @default([]) // plateformes où J'AI joué
+  playPeriod      String?     // "2003", "vers 2010", "2019-2021"…
+  estimatedHours  Int?
+  source          EntrySource @default(MANUAL)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  user            User        @relation(fields: [userId], references: [id])
+  game            Game        @relation(fields: [gameId], references: [id])
+
+  @@unique([userId, gameId]) // anti-duplication : une entrée par jeu et par utilisateur
+}
