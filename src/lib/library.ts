@@ -173,7 +173,9 @@ export async function listLibrary(
         ? { rating: { sort: 'desc' as const, nulls: 'last' as const } }
         : filters.sort === 'releaseYear'
           ? { game: { releaseYear: { sort: 'desc' as const, nulls: 'last' as const } } }
-          : { createdAt: 'desc' as const }
+          : filters.sort === 'hours'
+            ? { estimatedHours: { sort: 'desc' as const, nulls: 'last' as const } }
+            : { createdAt: 'desc' as const }
 
   return prisma.libraryEntry.findMany({
     where: {
@@ -181,6 +183,7 @@ export async function listLibrary(
       ...(filters.status && { status: filters.status }),
       ...(filters.platform && { platformsPlayed: { has: filters.platform } }),
       ...(filters.minRating !== undefined && { rating: { gte: filters.minRating } }),
+      ...(filters.minHours !== undefined && { estimatedHours: { gte: filters.minHours } }),
       ...(Object.keys(gameWhere).length > 0 && { game: gameWhere }),
     },
     include: { game: true, periods: { orderBy: { startYear: 'asc' } } },

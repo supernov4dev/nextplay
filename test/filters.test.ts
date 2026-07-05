@@ -29,3 +29,16 @@ describe('parseFilters', () => {
     expect(parseFilters({ status: 'toString' })).toEqual({ sort: 'recent' })
   })
 })
+
+describe('parseFilters — temps de jeu', () => {
+  it('parse le tri hours et minHours', () => {
+    expect(parseFilters({ sort: 'hours', minHours: '50' })).toEqual({
+      sort: 'hours',
+      minHours: 50,
+    })
+  })
+
+  it('ignore un minHours non numérique', () => {
+    expect(parseFilters({ minHours: 'abc' })).toEqual({ sort: 'recent' })
+  })
+})

@@ -122,3 +122,25 @@ export async function getGameById(igdbId: number): Promise<IgdbGame | null> {
   const raw = await igdbQuery(`where id = ${igdbId}; ${GAME_FIELDS} limit 1;`)
   return raw.length > 0 ? toIgdbGame(raw[0]) : null
 }
+
+// Deck de découverte : jeux principaux d'une ou plusieurs plateformes,
+// du plus connu au plus obscur (nombre de votes IGDB décroissant).
+export async function discoverGames(opts: {
+  platformIds: number[]
+  decade?: number
+  offset: number
+  limit?: number
+}): Promise<IgdbGame[]> {
+  const clauses = [
+    `platforms = (${opts.platformIds.join(',')})`,
+    'game_type = 0', // jeux principaux uniquement (pas de portage/compilation/DLC)
+  ]
+  if (opts.decade !== undefined) {
+    clauses.push(`first_release_date >= ${Date.UTC(opts.decade, 0, 1) / 1000}`)
+    clauses.push(`first_release_date < ${Date.UTC(opts.decade + 10, 0, 1) / 1000}`)
+  }
+  const raw = await igdbQuery(
+    `where ${clauses.join(' & ')}; sort total_rating_count desc; ${GAME_FIELDS} limit ${opts.limit ?? 20}; offset ${opts.offset};`,
+  )
+  return raw.map(toIgdbGame)
+}
