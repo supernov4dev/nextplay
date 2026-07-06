@@ -92,6 +92,7 @@ export function LibraryFilterBar({
         <input
           name="q"
           type="search"
+          aria-label="Rechercher un titre"
           defaultValue={filters.search ?? ''}
           placeholder="Rechercher un titre… (Entrée pour appliquer)"
           className={`${FIELD} min-w-48 flex-1`}
