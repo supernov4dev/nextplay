@@ -64,7 +64,13 @@ export function SteamImportCard() {
         const body = await res.json()
         if (!res.ok) return setError(body.error)
         setReport(body)
-        setConfig(await (await fetch('/api/settings/steam')).json())
+        // L'import a réussi : un échec du rafraîchissement de la config ne doit pas
+        // afficher une fausse erreur — seule la date du dernier import serait périmée.
+        try {
+          setConfig(await (await fetch('/api/settings/steam')).json())
+        } catch {
+          /* silencieux */
+        }
       }
     } catch {
       setError('Erreur réseau — réessayez.')

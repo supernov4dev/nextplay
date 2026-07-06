@@ -14,7 +14,7 @@ vi.mock('@/lib/igdb', () => ({
   getGamesBySteamAppIds: vi.fn(async () => new Map()),
 }))
 
-import { getOwnedGames, SteamAuthError } from '@/lib/steam'
+import { getOwnedGames, SteamAuthError, SteamPrivateProfileError } from '@/lib/steam'
 import { GET, PUT } from '@/app/api/settings/steam/route'
 import { POST as importSteam } from '@/app/api/import/steam/route'
 import { POST as testSteam } from '@/app/api/import/steam/test/route'
@@ -80,6 +80,14 @@ describe('POST /api/import/steam', () => {
     const res = await importSteam()
     expect(res.status).toBe(400)
     expect((await res.json()).error).toMatch(/steamcommunity\.com/)
+  })
+
+  it('profil privé ou SteamID64 incorrect → 400 avec le message de SteamPrivateProfileError', async () => {
+    await PUT(putRequest({ apiKey: 'k', accountId: STEAM_ID }))
+    vi.mocked(getOwnedGames).mockRejectedValueOnce(new SteamPrivateProfileError())
+    const res = await importSteam()
+    expect(res.status).toBe(400)
+    expect((await res.json()).error).toMatch(/profil privé|SteamID64/)
   })
 
   it('erreur inattendue → 502 générique', async () => {

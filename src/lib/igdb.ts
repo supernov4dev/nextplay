@@ -160,10 +160,12 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 export async function getGamesBySteamAppIds(
   appIds: number[],
 ): Promise<Map<number, IgdbGame>> {
+  // Ceinture de sécurité : uniquement des entiers dans le corps de requête IGDB.
+  const safeIds = appIds.filter((id) => Number.isInteger(id))
   const result = new Map<number, IgdbGame>()
-  for (let i = 0; i < appIds.length; i += MATCH_CHUNK_SIZE) {
+  for (let i = 0; i < safeIds.length; i += MATCH_CHUNK_SIZE) {
     if (i > 0) await sleep(600) // 2 requêtes par lot → reste sous 4 req/s
-    const chunk = appIds.slice(i, i + MATCH_CHUNK_SIZE)
+    const chunk = safeIds.slice(i, i + MATCH_CHUNK_SIZE)
     const uids = chunk.map((id) => `"${id}"`).join(',')
     const links = await igdbRequest<{ uid: string; game: number }[]>(
       'external_games',
