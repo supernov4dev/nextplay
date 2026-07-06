@@ -98,9 +98,9 @@ function toIgdbGame(raw: RawGame): IgdbGame {
   }
 }
 
-async function igdbQuery(body: string): Promise<RawGame[]> {
+async function igdbRequest<T>(path: string, body: string): Promise<T> {
   const token = await getAccessToken()
-  const res = await fetch(`${API_URL}/games`, {
+  const res = await fetch(`${API_URL}/${path}`, {
     method: 'POST',
     headers: {
       'Client-ID': process.env.IGDB_CLIENT_ID ?? '',
@@ -109,7 +109,11 @@ async function igdbQuery(body: string): Promise<RawGame[]> {
     body,
   })
   if (!res.ok) throw new Error(`IGDB a répondu HTTP ${res.status}`)
-  return (await res.json()) as RawGame[]
+  return (await res.json()) as T
+}
+
+async function igdbQuery(body: string): Promise<RawGame[]> {
+  return igdbRequest<RawGame[]>('games', body)
 }
 
 export async function searchGames(query: string): Promise<IgdbGame[]> {
@@ -143,4 +147,39 @@ export async function discoverGames(opts: {
     `where ${clauses.join(' & ')}; sort total_rating_count desc; ${GAME_FIELDS} limit ${opts.limit ?? 20}; offset ${opts.offset};`,
   )
   return raw.map(toIgdbGame)
+}
+
+// Matching de l'import Steam : appids → jeux IGDB, via l'endpoint
+// external_games (source 1 = Steam). Par lots, pour tenir dans une seule
+// requête IGDB et respecter la limite de 4 req/s entre les lots.
+const STEAM_SOURCE = 1
+const MATCH_CHUNK_SIZE = 100
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+export async function getGamesBySteamAppIds(
+  appIds: number[],
+): Promise<Map<number, IgdbGame>> {
+  const result = new Map<number, IgdbGame>()
+  for (let i = 0; i < appIds.length; i += MATCH_CHUNK_SIZE) {
+    if (i > 0) await sleep(600) // 2 requêtes par lot → reste sous 4 req/s
+    const chunk = appIds.slice(i, i + MATCH_CHUNK_SIZE)
+    const uids = chunk.map((id) => `"${id}"`).join(',')
+    const links = await igdbRequest<{ uid: string; game: number }[]>(
+      'external_games',
+      `fields uid, game; where uid = (${uids}) & external_game_source = ${STEAM_SOURCE}; limit 500;`,
+    )
+    if (links.length === 0) continue
+    const gameIds = [...new Set(links.map((l) => l.game))]
+    const raw = await igdbQuery(
+      `where id = (${gameIds.join(',')}); ${GAME_FIELDS} limit 500;`,
+    )
+    const byId = new Map(raw.map((r) => [r.id, toIgdbGame(r)]))
+    for (const link of links) {
+      const game = byId.get(link.game)
+      const appId = Number(link.uid)
+      if (game && !result.has(appId)) result.set(appId, game)
+    }
+  }
+  return result
 }

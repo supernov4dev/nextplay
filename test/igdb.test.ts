@@ -142,3 +142,66 @@ describe('getGameById', () => {
     expect(await getGameById(999999)).toBeNull()
   })
 })
+
+describe('getGamesBySteamAppIds', () => {
+  function mockMatchFetch(links: unknown[], games: unknown[]) {
+    return vi.fn(async (url: RequestInfo | URL, init?: RequestInit) => {
+      void init
+      const u = String(url)
+      if (u.includes('id.twitch.tv'))
+        return new Response(JSON.stringify(TOKEN_RESPONSE), { status: 200 })
+      if (u.includes('/external_games'))
+        return new Response(JSON.stringify(links), { status: 200 })
+      return new Response(JSON.stringify(games), { status: 200 })
+    })
+  }
+
+  it('mappe appid Steam → jeu IGDB via external_games', async () => {
+    const fetchMock = mockMatchFetch(
+      [{ id: 555, uid: '1091500', game: 1942 }],
+      [RAW_GAME],
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const { getGamesBySteamAppIds } = await import('@/lib/igdb')
+    const result = await getGamesBySteamAppIds([1091500, 999])
+    expect(result.get(1091500)?.title).toBe('The Witcher 3: Wild Hunt')
+    expect(result.has(999)).toBe(false) // non référencé par IGDB → absent
+    const extBody = String(
+      fetchMock.mock.calls.find(([u]) => String(u).includes('/external_games'))?.[1]?.body,
+    )
+    expect(extBody).toContain('where uid = ("1091500","999") & external_game_source = 1')
+    const gamesBody = String(
+      fetchMock.mock.calls.find(([u]) => String(u).includes('/games'))?.[1]?.body,
+    )
+    expect(gamesBody).toContain('where id = (1942)')
+  })
+
+  it('aucun lien trouvé → Map vide, sans requête /games', async () => {
+    const fetchMock = mockMatchFetch([], [])
+    vi.stubGlobal('fetch', fetchMock)
+    const { getGamesBySteamAppIds } = await import('@/lib/igdb')
+    const result = await getGamesBySteamAppIds([111, 222])
+    expect(result.size).toBe(0)
+    expect(fetchMock.mock.calls.some(([u]) => String(u).includes('/games'))).toBe(false)
+  })
+
+  it('liste vide → Map vide sans aucune requête', async () => {
+    const fetchMock = mockMatchFetch([], [])
+    vi.stubGlobal('fetch', fetchMock)
+    const { getGamesBySteamAppIds } = await import('@/lib/igdb')
+    expect((await getGamesBySteamAppIds([])).size).toBe(0)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('découpe en lots de 100 appids', async () => {
+    const fetchMock = mockMatchFetch([], [])
+    vi.stubGlobal('fetch', fetchMock)
+    const { getGamesBySteamAppIds } = await import('@/lib/igdb')
+    const ids = Array.from({ length: 150 }, (_, i) => i + 1)
+    await getGamesBySteamAppIds(ids)
+    const extCalls = fetchMock.mock.calls.filter(([u]) =>
+      String(u).includes('/external_games'),
+    )
+    expect(extCalls).toHaveLength(2)
+  }, 10_000) // un lot au-delà du premier attend 600 ms (limite IGDB 4 req/s)
+})
