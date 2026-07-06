@@ -85,13 +85,26 @@ async function attachSteamEntry(
     where: { userId_gameId: { userId, gameId } },
   })
   if (existing) {
+    // Promotion Collection → À trier : uniquement sur la transition 0 → positif
+    // (le jeu a été lancé depuis l'import). La promotion exige un 0 OBSERVÉ
+    // (les entrées créées par l'import ont toujours 0, jamais null) ; un
+    // temps inconnu (null, ex. fiche manuelle jamais synchronisée) ne compte
+    // pas comme 0. Une entrée rangée en Collection À LA MAIN avec du temps de
+    // jeu ne re-bascule jamais.
+    const promote =
+      existing.status === 'OWNED' &&
+      existing.steamPlaytimeMinutes === 0 &&
+      owned.playtimeMinutes > 0
     await prisma.libraryEntry.update({
       where: { id: existing.id },
       data: {
         platformsPlayed: [...new Set([...existing.platformsPlayed, STEAM_PLATFORM])],
-        // Le temps de jeu Steam est monotone : on ne le fait jamais reculer
-        // (cas de collision où un second appId renverrait 0).
-        steamPlaytimeMinutes: Math.max(existing.steamPlaytimeMinutes ?? 0, owned.playtimeMinutes),
+        // Le temps Steam ne diminue jamais (playtime_forever est monotone)
+        steamPlaytimeMinutes: Math.max(
+          existing.steamPlaytimeMinutes ?? 0,
+          owned.playtimeMinutes,
+        ),
+        ...(promote && { status: 'TO_SORT' as const }),
       },
     })
     return { created: false }
@@ -100,7 +113,8 @@ async function attachSteamEntry(
     data: {
       userId,
       gameId,
-      status: 'TO_SORT',
+      // Jamais lancé (0 min) = possession → Collection ; sinon file « À trier »
+      status: owned.playtimeMinutes > 0 ? 'TO_SORT' : 'OWNED',
       source: 'STEAM',
       platformsPlayed: [STEAM_PLATFORM],
       steamPlaytimeMinutes: owned.playtimeMinutes,

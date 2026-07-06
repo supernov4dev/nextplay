@@ -80,3 +80,48 @@ describe('listLibrary — temps de jeu', () => {
     expect(list.map((e) => e.game.title)).toEqual(['Hades'])
   })
 })
+
+describe('heures effectives (estimées sinon Steam)', () => {
+  // Pas de helper createEntry existant dans ce fichier : on en écrit un local,
+  // minimal (Game + LibraryEntry, statut FINISHED).
+  async function createEntry(data: {
+    title: string
+    estimatedHours?: number | null
+    steamPlaytimeMinutes?: number | null
+  }) {
+    const game = await prisma.game.create({ data: { title: data.title } })
+    return prisma.libraryEntry.create({
+      data: {
+        userId: USER,
+        gameId: game.id,
+        status: 'FINISHED',
+        estimatedHours: data.estimatedHours ?? null,
+        steamPlaytimeMinutes: data.steamPlaytimeMinutes ?? null,
+      },
+    })
+  }
+
+  // Repart d'une bibliothèque vide (le beforeEach global crée déjà 3 jeux)
+  // pour que les assertions ci-dessous ne portent que sur A/B/C.
+  beforeEach(async () => {
+    await prisma.libraryEntry.deleteMany()
+    await prisma.game.deleteMany()
+  })
+
+  it('trie par heures en combinant estimées et temps Steam', async () => {
+    // A : 10 h estimées ; B : 20 h de Steam (1200 min) ; C : rien
+    await createEntry({ title: 'A', estimatedHours: 10 })
+    await createEntry({ title: 'B', steamPlaytimeMinutes: 1200 })
+    await createEntry({ title: 'C' })
+    const entries = await listLibrary(USER, { sort: 'hours' })
+    expect(entries.map((e) => e.game.title)).toEqual(['B', 'A', 'C'])
+  })
+
+  it('filtre minHours en tenant compte du temps Steam', async () => {
+    await createEntry({ title: 'A', estimatedHours: 10 })
+    await createEntry({ title: 'B', steamPlaytimeMinutes: 1200 })
+    await createEntry({ title: 'C', steamPlaytimeMinutes: 30 })
+    const entries = await listLibrary(USER, { sort: 'recent', minHours: 5 })
+    expect(entries.map((e) => e.game.title).sort()).toEqual(['A', 'B'])
+  })
+})

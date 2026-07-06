@@ -40,6 +40,7 @@ enum EntryStatus {
   DROPPED  // Abandonné
   PAUSED   // En pause
   WISHLIST // Souhaité
+  OWNED    // Collection : possédé mais ne compte pas dans les jeux joués
   TO_SORT  // À trier (imports)
 }
 

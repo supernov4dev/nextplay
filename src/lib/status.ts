@@ -6,6 +6,7 @@ export const STATUS_LABELS: Record<EntryStatus, string> = {
   DROPPED: 'Abandonné',
   PAUSED: 'En pause',
   WISHLIST: 'Souhaité',
+  OWNED: 'Collection',
   TO_SORT: 'À trier',
 }
 

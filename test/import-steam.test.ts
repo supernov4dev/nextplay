@@ -228,6 +228,110 @@ describe('runSteamImport', () => {
     const config = await getSteamConfig(USER)
     expect(config.lastImportAt).not.toBeNull()
   })
+
+  it('jeu possédé jamais lancé (0 min) → statut Collection', async () => {
+    await configure()
+    vi.mocked(getOwnedGames).mockResolvedValueOnce([
+      { appId: 620, name: 'Portal 2', playtimeMinutes: 0 },
+    ])
+    vi.mocked(getGamesBySteamAppIds).mockResolvedValueOnce(new Map())
+    await runSteamImport(USER)
+    const entry = await prisma.libraryEntry.findFirst({
+      where: { game: { steamAppId: 620 } },
+    })
+    expect(entry?.status).toBe('OWNED')
+  })
+
+  it('relance : une entrée Collection qui gagne du temps de jeu est promue À trier', async () => {
+    await configure()
+    const owned = [{ appId: 620, name: 'Portal 2', playtimeMinutes: 0 }]
+    vi.mocked(getOwnedGames).mockResolvedValue(owned)
+    await runSteamImport(USER) // arrive en Collection (0 min)
+
+    vi.mocked(getOwnedGames).mockResolvedValue([{ ...owned[0], playtimeMinutes: 90 }])
+    await runSteamImport(USER)
+    const entry = await prisma.libraryEntry.findFirst({
+      where: { game: { steamAppId: 620 } },
+    })
+    expect(entry?.status).toBe('TO_SORT')
+    expect(entry?.steamPlaytimeMinutes).toBe(90)
+  })
+
+  it("une entrée requalifiée Collection À LA MAIN avec du temps n'est jamais re-promue", async () => {
+    await configure()
+    // Bêta jouée (500 min) puis rangée en Collection par l'utilisateur
+    const game = await prisma.game.create({
+      data: { title: 'Bêta quelconque', steamAppId: 777, platforms: [] },
+    })
+    await prisma.libraryEntry.create({
+      data: {
+        userId: USER,
+        gameId: game.id,
+        status: 'OWNED',
+        source: 'STEAM',
+        platformsPlayed: ['PC'],
+        steamPlaytimeMinutes: 500,
+      },
+    })
+    vi.mocked(getOwnedGames).mockResolvedValueOnce([
+      { appId: 777, name: 'Bêta quelconque', playtimeMinutes: 520 },
+    ])
+    await runSteamImport(USER)
+    const entry = await prisma.libraryEntry.findFirst({ where: { gameId: game.id } })
+    expect(entry?.status).toBe('OWNED') // transition 0 → positif absente : intouché
+    expect(entry?.steamPlaytimeMinutes).toBe(520)
+  })
+
+  it('une entrée Collection manuelle SANS temps Steam (null) n\'est pas promue au premier match', async () => {
+    await configure()
+    // Jeu ajouté à la main, jamais synchronisé avec Steam : baseline null,
+    // pas 0 observé. Le premier import ne doit pas la faire basculer.
+    const game = await prisma.game.create({
+      data: { igdbId: 4242, title: 'Jeu ajouté à la main', steamAppId: 4242, platforms: [] },
+    })
+    await prisma.libraryEntry.create({
+      data: {
+        userId: USER,
+        gameId: game.id,
+        status: 'OWNED',
+        source: 'MANUAL',
+        platformsPlayed: ['PC'],
+        steamPlaytimeMinutes: null,
+      },
+    })
+    vi.mocked(getOwnedGames).mockResolvedValueOnce([
+      { appId: 4242, name: 'Jeu ajouté à la main', playtimeMinutes: 300 },
+    ])
+    await runSteamImport(USER)
+    const entry = await prisma.libraryEntry.findFirst({ where: { gameId: game.id } })
+    expect(entry?.status).toBe('OWNED') // baseline null ≠ transition 0 → positif
+    expect(entry?.steamPlaytimeMinutes).toBe(300)
+  })
+
+  it('une entrée déjà qualifiée (ex. FINISHED) reste intouchée par la promotion', async () => {
+    await configure()
+    const game = await prisma.game.create({
+      data: { title: 'Hades', steamAppId: 1145360, platforms: [] },
+    })
+    await prisma.libraryEntry.create({
+      data: {
+        userId: USER,
+        gameId: game.id,
+        status: 'FINISHED',
+        rating: 18,
+        source: 'MANUAL',
+        platformsPlayed: ['Switch'],
+        steamPlaytimeMinutes: 0,
+      },
+    })
+    vi.mocked(getOwnedGames).mockResolvedValueOnce([
+      { appId: 1145360, name: 'Hades', playtimeMinutes: 600 },
+    ])
+    await runSteamImport(USER)
+    const entry = await prisma.libraryEntry.findFirst({ where: { gameId: game.id } })
+    expect(entry?.status).toBe('FINISHED') // seule OWNED est promue
+    expect(entry?.rating).toBe(18)
+  })
 })
 
 describe('testSteamConnection', () => {
