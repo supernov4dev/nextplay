@@ -38,6 +38,11 @@ describe('validatePersonal', () => {
     })
   })
 
+  it('accepte le statut Collection (OWNED)', () => {
+    const result = validatePersonal({ status: 'OWNED' })
+    expect(result.ok).toBe(true)
+  })
+
   it('accepte une note jusqu’à 20 et rejette au-delà', () => {
     expect(validatePersonal({ status: 'FINISHED', rating: 20 }).ok).toBe(true)
     expect(validatePersonal({ status: 'FINISHED', rating: 21 }).ok).toBe(false)

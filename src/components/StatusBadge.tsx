@@ -7,6 +7,7 @@ const COLORS: Record<EntryStatus, string> = {
   DROPPED: 'bg-red-900 text-red-300',
   PAUSED: 'bg-amber-900 text-amber-300',
   WISHLIST: 'bg-purple-900 text-purple-300',
+  OWNED: 'bg-indigo-950 text-indigo-300',
   TO_SORT: 'bg-zinc-800 text-zinc-300',
 }
 
