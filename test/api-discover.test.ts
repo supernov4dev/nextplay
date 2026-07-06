@@ -22,6 +22,7 @@ import { POST as EXCLUDE } from '@/app/api/discover/exclude/route'
 import { addGameFromIgdb } from '@/lib/library'
 
 beforeEach(async () => {
+  await prisma.importSource.deleteMany()
   await prisma.discoveryExclusion.deleteMany()
   await prisma.libraryEntry.deleteMany()
   await prisma.game.deleteMany()

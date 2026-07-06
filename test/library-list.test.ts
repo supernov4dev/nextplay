@@ -13,6 +13,7 @@ function fakeGame(igdbId: number, title: string, year: number, genres: string[])
 }
 
 beforeEach(async () => {
+  await prisma.importSource.deleteMany()
   await prisma.libraryEntry.deleteMany()
   await prisma.game.deleteMany()
   await prisma.user.deleteMany()
