@@ -66,6 +66,14 @@ export default async function FicheJeuPage({
             {entry.platformsPlayed.length > 0 && <span>Joué sur : {entry.platformsPlayed.join(', ')}</span>}
             {entry.periods.length > 0 && <span>Période(s) : {formatPeriods(entry.periods)}</span>}
             {entry.estimatedHours != null && <span>≈ {entry.estimatedHours} h</span>}
+            {entry.steamPlaytimeMinutes != null && (
+              <span title="Temps de jeu réel enregistré par Steam">
+                Steam :{' '}
+                {entry.steamPlaytimeMinutes >= 60
+                  ? `${Math.round(entry.steamPlaytimeMinutes / 60)} h`
+                  : `${entry.steamPlaytimeMinutes} min`}
+              </span>
+            )}
           </div>
           {entry.review && (
             <blockquote className="rounded border-l-2 border-emerald-700 bg-zinc-900 p-3 text-sm">
