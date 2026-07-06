@@ -32,6 +32,7 @@ function jsonRequest(method: string, body: unknown): Request {
 }
 
 beforeEach(async () => {
+  await prisma.importSource.deleteMany()
   await prisma.libraryEntry.deleteMany()
   await prisma.game.deleteMany()
   await prisma.user.deleteMany()
