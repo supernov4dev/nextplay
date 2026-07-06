@@ -141,7 +141,7 @@ export function LibraryFilterBar({
             status: null,
           })}`}
           title="Masque « À trier » et « Collection » : ne restent que les jeux que vous avez qualifiés"
-          className={filters.qualified ? CHIP_ON : CHIP_OFF}
+          className={filters.qualified && !filters.status ? CHIP_ON : CHIP_OFF}
         >
           Qualifiés seulement
         </Link>
