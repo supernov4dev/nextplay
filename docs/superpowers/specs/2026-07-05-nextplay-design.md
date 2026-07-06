@@ -73,8 +73,9 @@ Navigateur (PC / mobile)
 
 - Un Deployment Next.js + un Deployment Postgres avec PVC `local-path`, dans un
   namespace `nextplay` dédié (copie du pattern n8n).
-- Secrets (IGDB/Twitch, Steam, Claude, mot de passe Postgres) : K8s Secrets référencés
-  par `secretKeyRef`, jamais commités.
+- Secrets (IGDB/Twitch, Claude, mot de passe Postgres) : K8s Secrets référencés
+  par `secretKeyRef`, jamais commités. Exception : les identifiants Steam (clé Web
+  API + SteamID64) se configurent dans l'UI et vivent en base (cf. `ImportSource`).
 
 ## 4. Modèle de données (Prisma → Postgres)
 
@@ -100,6 +101,14 @@ Navigateur (PC / mobile)
 - **`Recommendation`** — historique des recommandations : envie exprimée (texte +
   types), jeux suggérés, justifications du LLM, réaction de l'utilisateur
   (*intéressé* / *déjà joué* / *pas pour moi*). Ce feedback nourrit les recos suivantes.
+- **`ImportSource`** (révision du 2026-07-06, plan 2) — configuration d'une source
+  d'import par utilisateur : `provider` (enum, `STEAM` seul en v1), `apiKey`,
+  `accountId` (SteamID64 pour Steam), `lastImportAt`, unique (`userId`, `provider`).
+  Les identifiants se saisissent dans la page Réglages et sont stockés en base
+  (app solo auto-hébergée, Postgres privé) — pas de variable d'environnement à gérer.
+  Champs associés : `Game.steamAppId` (unique, ancre d'idempotence) et
+  `LibraryEntry.steamPlaytimeMinutes` (temps Steam réel, distinct des heures estimées
+  saisies à la main, jamais écrasées).
 
 **Règle anti-duplication (centrale) :** un jeu = une seule fiche `Game` (identifiée par
 `igdbId`) et une seule `LibraryEntry` par utilisateur. Ajouter un jeu déjà présent (à la
@@ -171,18 +180,33 @@ Les jeux déjà en bibliothèque sont exclus du deck.
 Jaquette et métadonnées IGDB d'un côté, vécu personnel de l'autre. Édition inline des
 données personnelles.
 
-### 5.4 Import Steam (page Réglages)
+### 5.4 Import Steam (page Réglages) — précisé le 2026-07-06 (plan 2)
 
-- Saisie du SteamID64 (+ clé Web API en secret). Appel `GetOwnedGames`.
-- Matching Steam → IGDB via les IDs Steam référencés par IGDB (fiable). Les non-matchés
-  vont dans la file « à trier » pour résolution manuelle ou création de fiche manuelle.
-- Les jeux importés arrivent avec le statut **« à trier »** ; une file de triage permet
-  de les qualifier (statut, note, avis) au fil de l'eau, ou de les ignorer (jeux de
-  bundles jamais lancés).
-- **Idempotent et relançable** : jamais de doublon ; une relance met à jour les temps de
-  jeu.
-- La page Réglages est structurée en « Sources d'import » extensibles (Steam en v1,
-  emplacements prévus pour PSN/Xbox).
+- **Page Réglages** (`/reglages`, dans la navigation) structurée en « Sources
+  d'import » extensibles : carte Steam en v1, emplacements PSN/Xbox affichés
+  désactivés. La carte Steam comporte le formulaire (clé Web API + SteamID64,
+  stockés en base via `ImportSource`), un bouton « Tester la connexion », le bouton
+  « Importer », la date et le bilan du dernier import. Une aide en français indique
+  où obtenir la clé (steamcommunity.com/dev/apikey) et le SteamID64.
+- **Flux d'import** (`POST /api/import/steam`) : appel `GetOwnedGames` (avec noms),
+  puis pour chaque jeu possédé :
+  1. `steamAppId` déjà connu → simple rafraîchissement du temps de jeu ;
+  2. sinon matching Steam → IGDB par lots via les IDs Steam référencés par IGDB
+     (`external_games`), limite 4 req/s respectée ;
+  3. matché → fiche `Game` créée depuis IGDB + entrée **« à trier »** (source
+     `STEAM`, plateforme « PC », temps Steam). Jeu déjà en bibliothèque → fusion
+     conforme à la règle anti-duplication : ajout de « PC » et du temps Steam,
+     statut/note/avis existants intacts ;
+  4. non-matché → fiche manuelle (titre Steam, `steamAppId`, sans `igdbId`) +
+     entrée « à trier », à qualifier ou ignorer au fil de l'eau (bundles jamais
+     lancés).
+- **Rapport d'import** : nouveaux / mis à jour / non-matchés.
+- **Idempotent et relançable** : jamais de doublon (garanti par `steamAppId` unique
+  + anti-duplication) ; une relance ou un import interrompu se rejoue sans risque et
+  met à jour les temps de jeu.
+- **Cas piège** : un profil Steam privé renvoie une liste vide sans erreur — détecté
+  et signalé (« votre profil doit être public le temps de l'import »). Clé invalide /
+  SteamID inconnu → messages français explicites.
 
 ### 5.5 « À quoi jouer ? » (recommandations)
 
@@ -205,8 +229,8 @@ données personnelles.
   token (~60 jours) renouvelé automatiquement. Limite de 4 req/s respectée côté app.
   Sollicité uniquement pour : recherche à l'ajout, matching d'import, enrichissement
   des recommandations.
-- **Steam Web API** : clé + SteamID64. `GetOwnedGames` pour la liste et les temps de
-  jeu.
+- **Steam Web API** : clé + SteamID64, saisis dans la page Réglages (stockés en
+  base). `GetOwnedGames` pour la liste et les temps de jeu. Gratuite.
 - **API Claude** : réponses JSON structurées ; prompt construit à partir de la
   bibliothèque et de l'historique de feedback.
 
