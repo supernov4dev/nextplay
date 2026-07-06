@@ -16,7 +16,11 @@ const OWNED_RESPONSE = {
 }
 
 function mockFetch(body: unknown, status = 200) {
-  return vi.fn(async () => new Response(JSON.stringify(body), { status }))
+  // Le paramètre url est capturé dans mock.calls pour inspecter la requête envoyée
+  return vi.fn(async (url: RequestInfo | URL) => {
+    void url
+    return new Response(JSON.stringify(body), { status })
+  })
 }
 
 describe('getOwnedGames', () => {
