@@ -86,11 +86,14 @@ async function attachSteamEntry(
   })
   if (existing) {
     // Promotion Collection → À trier : uniquement sur la transition 0 → positif
-    // (le jeu a été lancé depuis l'import). Une entrée rangée en Collection
-    // À LA MAIN avec du temps de jeu ne re-bascule jamais.
+    // (le jeu a été lancé depuis l'import). La promotion exige un 0 OBSERVÉ
+    // (les entrées créées par l'import ont toujours 0, jamais null) ; un
+    // temps inconnu (null, ex. fiche manuelle jamais synchronisée) ne compte
+    // pas comme 0. Une entrée rangée en Collection À LA MAIN avec du temps de
+    // jeu ne re-bascule jamais.
     const promote =
       existing.status === 'OWNED' &&
-      (existing.steamPlaytimeMinutes ?? 0) === 0 &&
+      existing.steamPlaytimeMinutes === 0 &&
       owned.playtimeMinutes > 0
     await prisma.libraryEntry.update({
       where: { id: existing.id },
