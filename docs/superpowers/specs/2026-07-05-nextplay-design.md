@@ -134,7 +134,17 @@ Deux niveaux, pour rester lisible avec plusieurs centaines de jeux (éviter le s
   titre, note, statut, plateformes, période — colonnes triables), bascule possible en
   grille de jaquettes. La colonne heures affiche les heures estimées saisies à la
   main, et à défaut le **temps Steam réel** (révision du 2026-07-06) ; le tri et le
-  filtre par heures portent sur la valeur combinée. Navigation principale par filtres/facettes : statut, plateforme
+  filtre par heures portent sur la valeur combinée.
+
+  **Barre de filtres** (repensée le 2026-07-06) : filtrage instantané, sans bouton
+  « Filtrer ». Ligne 1 : recherche (validée à Entrée) + tri compact. Ligne 2 : les
+  **statuts en chips cliquables** (chip active surlignée émeraude), plus une chip
+  spéciale **« Qualifiés seulement »** (paramètre `qualified`) qui masque d'un coup
+  « À trier » et « Collection » — sans effet si un statut explicite est sélectionné
+  — et un lien « Réinitialiser » visible seulement quand des filtres sont actifs.
+  Ligne 3 repliée (« Plus de filtres », dépliée si l'un est actif) : plateforme,
+  genre, décennie, note min, heures min. Style sobre cohérent (bordures fines,
+  émeraude réservée à l'état actif). Navigation principale par filtres/facettes : statut, plateforme
   jouée, genre, décennie, note, source. Recherche plein-texte locale.
 
 ### 5.2 Ajout de jeux
