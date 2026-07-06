@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { prisma } from '@/lib/prisma'
 import { addGameFromIgdb, listLibrary } from '@/lib/library'
 import type { IgdbGame } from '@/lib/igdb'
+import type { EntryStatus } from '@prisma/client'
 
 const USER = 'test-user'
 
@@ -130,14 +131,14 @@ describe('filtre qualifiés (masque À trier et Collection)', () => {
   // Local helper pour créer des entrées avec différents statuts
   async function createEntry(data: {
     title: string
-    status: string
+    status: EntryStatus
   }) {
     const game = await prisma.game.create({ data: { title: data.title } })
     return prisma.libraryEntry.create({
       data: {
         userId: USER,
         gameId: game.id,
-        status: data.status as any, // cast accepté ici car test
+        status: data.status,
       },
     })
   }
