@@ -88,7 +88,10 @@ Navigateur (PC / mobile)
   sollicite plus IGDB.
 - **`LibraryEntry`** — le vécu de l'utilisateur sur un jeu (cœur du projet) :
   `userId` + `gameId` (unique ensemble), **statut** (terminé / en cours / abandonné /
-  en pause / souhaité / à trier), **note sur 20** (entier, affichée en badge coloré
+  en pause / souhaité / **collection** / à trier — « Collection », ajouté le
+  2026-07-06 : possédé mais ne compte pas dans les jeux joués ; sert aux jeux
+  Steam jamais lancés et aux non-jeux type bêta/démo requalifiés à la main),
+  **note sur 20** (entier, affichée en badge coloré
   type Metacritic), **platiné / 100 %** (booléen indépendant du statut, badge 🏆),
   **avis** texte, **plateformes jouées** (vocabulaire fermé défini dans
   `src/lib/platforms.ts` — puces cliquables, plateformes du jeu selon IGDB
@@ -129,7 +132,9 @@ Deux niveaux, pour rester lisible avec plusieurs centaines de jeux (éviter le s
   (total de jeux, répartition par statut).
 - **« Tous les jeux » = vue dense** : liste compacte par défaut (petite jaquette,
   titre, note, statut, plateformes, période — colonnes triables), bascule possible en
-  grille de jaquettes. Navigation principale par filtres/facettes : statut, plateforme
+  grille de jaquettes. La colonne heures affiche les heures estimées saisies à la
+  main, et à défaut le **temps Steam réel** (révision du 2026-07-06) ; le tri et le
+  filtre par heures portent sur la valeur combinée. Navigation principale par filtres/facettes : statut, plateforme
   jouée, genre, décennie, note, source. Recherche plein-texte locale.
 
 ### 5.2 Ajout de jeux
@@ -193,10 +198,16 @@ données personnelles.
   1. `steamAppId` déjà connu → simple rafraîchissement du temps de jeu ;
   2. sinon matching Steam → IGDB par lots via les IDs Steam référencés par IGDB
      (`external_games`), limite 4 req/s respectée ;
-  3. matché → fiche `Game` créée depuis IGDB + entrée **« à trier »** (source
-     `STEAM`, plateforme « PC », temps Steam). Jeu déjà en bibliothèque → fusion
-     conforme à la règle anti-duplication : ajout de « PC » et du temps Steam,
-     statut/note/avis existants intacts ;
+  3. matché → fiche `Game` créée depuis IGDB + entrée (source `STEAM`,
+     plateforme « PC », temps Steam) avec le statut **« à trier »** si du temps
+     de jeu existe, **« collection »** si 0 min (jeu possédé jamais lancé —
+     révision du 2026-07-06). Jeu déjà en bibliothèque → fusion conforme à la
+     règle anti-duplication : ajout de « PC » et du temps Steam (jamais à la
+     baisse), statut/note/avis existants intacts — à une exception près :
+     une entrée « collection » dont le temps Steam passe de 0 à positif est
+     **promue automatiquement en « à trier »** (vous y avez joué depuis).
+     La transition exacte 0 → positif protège les entrées requalifiées à la
+     main en « collection » avec du temps de jeu : elles ne sont jamais re-promues ;
   4. non-matché → fiche manuelle (titre Steam, `steamAppId`, sans `igdbId`) +
      entrée « à trier », à qualifier ou ignorer au fil de l'eau (bundles jamais
      lancés).
