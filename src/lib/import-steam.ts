@@ -89,7 +89,9 @@ async function attachSteamEntry(
       where: { id: existing.id },
       data: {
         platformsPlayed: [...new Set([...existing.platformsPlayed, STEAM_PLATFORM])],
-        steamPlaytimeMinutes: owned.playtimeMinutes,
+        // Le temps de jeu Steam est monotone : on ne le fait jamais reculer
+        // (cas de collision où un second appId renverrait 0).
+        steamPlaytimeMinutes: Math.max(existing.steamPlaytimeMinutes ?? 0, owned.playtimeMinutes),
       },
     })
     return { created: false }
@@ -149,25 +151,38 @@ export async function runSteamImport(userId: string): Promise<ImportReport> {
   for (const ownedGame of toMatch) {
     const igdb = matched.get(ownedGame.appId)
     if (igdb) {
-      // Le jeu peut déjà exister via son igdbId (ajouté à la main) : on y
-      // accroche alors le steamAppId — règle anti-duplication.
-      const game = await prisma.game.upsert({
-        where: { igdbId: igdb.igdbId },
-        update: { steamAppId: ownedGame.appId },
-        create: {
-          igdbId: igdb.igdbId,
-          steamAppId: ownedGame.appId,
-          title: igdb.title,
-          coverUrl: igdb.coverUrl,
-          releaseYear: igdb.releaseYear,
-          // Résumé en anglais : le batch `npm run translate:fr` rattrapera.
-          summary: igdb.summary,
-          genres: igdb.genres,
-          themes: igdb.themes,
-          platforms: igdb.platforms,
-          igdbRating: igdb.igdbRating,
-        },
-      })
+      // Le jeu peut déjà exister via son igdbId (ajouté à la main, ou déjà
+      // ancré par un appId précédent dans ce même run) : on y accroche alors
+      // le steamAppId — règle anti-duplication.
+      const existingByIgdb = await prisma.game.findUnique({ where: { igdbId: igdb.igdbId } })
+      let game
+      if (existingByIgdb) {
+        // Deux éditions Steam (ex. Epic/Steam) peuvent pointer vers le même
+        // jeu IGDB : la première ancre gagne, on ne la vole pas au second
+        // appId sous peine de perdre son temps de jeu au profil suivant.
+        game = existingByIgdb.steamAppId
+          ? existingByIgdb
+          : await prisma.game.update({
+              where: { id: existingByIgdb.id },
+              data: { steamAppId: ownedGame.appId },
+            })
+      } else {
+        game = await prisma.game.create({
+          data: {
+            igdbId: igdb.igdbId,
+            steamAppId: ownedGame.appId,
+            title: igdb.title,
+            coverUrl: igdb.coverUrl,
+            releaseYear: igdb.releaseYear,
+            // Résumé en anglais : le batch `npm run translate:fr` rattrapera.
+            summary: igdb.summary,
+            genres: igdb.genres,
+            themes: igdb.themes,
+            platforms: igdb.platforms,
+            igdbRating: igdb.igdbRating,
+          },
+        })
+      }
       const { created } = await attachSteamEntry(userId, game.id, ownedGame)
       if (created) report.added++
       else report.updated++

@@ -193,6 +193,32 @@ describe('runSteamImport', () => {
     expect(await prisma.libraryEntry.count()).toBe(1) // pas de doublon
   })
 
+  it('deux appIds Steam → même jeu IGDB : la première ancre gagne, pas de perte de temps de jeu', async () => {
+    await configure()
+    vi.mocked(getOwnedGames).mockResolvedValueOnce([
+      { appId: 1145360, name: 'Hades', playtimeMinutes: 600 },
+      { appId: 2000000, name: 'Hades (édition Epic->Steam)', playtimeMinutes: 0 },
+    ])
+    vi.mocked(getGamesBySteamAppIds).mockResolvedValueOnce(
+      new Map([
+        [1145360, HADES],
+        [2000000, HADES],
+      ]),
+    )
+
+    const report = await runSteamImport(USER)
+    expect(report.added).toBe(1)
+    expect(await prisma.game.count()).toBe(1)
+    expect(await prisma.libraryEntry.count()).toBe(1)
+
+    const hades = await prisma.game.findUnique({
+      where: { igdbId: 113112 },
+      include: { entries: true },
+    })
+    expect(hades?.steamAppId).toBe(1145360) // première ancre conservée
+    expect(hades?.entries[0]?.steamPlaytimeMinutes).toBe(600) // pas écrasé par 0
+  })
+
   it('met à jour lastImportAt', async () => {
     await configure()
     vi.mocked(getOwnedGames).mockResolvedValueOnce([])
