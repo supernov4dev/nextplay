@@ -5,6 +5,7 @@ export type LibrarySort = 'recent' | 'title' | 'rating' | 'releaseYear' | 'hours
 
 export type LibraryFilters = {
   status?: EntryStatus
+  qualified?: boolean // masque À trier et Collection (ignoré si status est présent)
   platform?: string
   genre?: string
   decade?: number
@@ -26,6 +27,7 @@ export function parseFilters(
       : 'recent',
   }
   if (isEntryStatus(params.status)) filters.status = params.status
+  if (params.qualified === '1') filters.qualified = true
   if (params.platform) filters.platform = params.platform
   if (params.genre) filters.genre = params.genre
   const decade = Number(params.decade)

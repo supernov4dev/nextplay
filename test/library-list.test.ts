@@ -125,3 +125,46 @@ describe('heures effectives (estimées sinon Steam)', () => {
     expect(entries.map((e) => e.game.title).sort()).toEqual(['A', 'B'])
   })
 })
+
+describe('filtre qualifiés (masque À trier et Collection)', () => {
+  // Local helper pour créer des entrées avec différents statuts
+  async function createEntry(data: {
+    title: string
+    status: string
+  }) {
+    const game = await prisma.game.create({ data: { title: data.title } })
+    return prisma.libraryEntry.create({
+      data: {
+        userId: USER,
+        gameId: game.id,
+        status: data.status as any, // cast accepté ici car test
+      },
+    })
+  }
+
+  // Repart d'une bibliothèque vide
+  beforeEach(async () => {
+    await prisma.libraryEntry.deleteMany()
+    await prisma.game.deleteMany()
+  })
+
+  it('exclut TO_SORT et OWNED quand qualified est actif', async () => {
+    await createEntry({ title: 'A', status: 'FINISHED' })
+    await createEntry({ title: 'B', status: 'TO_SORT' })
+    await createEntry({ title: 'C', status: 'OWNED' })
+    await createEntry({ title: 'D', status: 'PLAYING' })
+    const entries = await listLibrary(USER, { sort: 'title', qualified: true })
+    expect(entries.map((e) => e.game.title)).toEqual(['A', 'D'])
+  })
+
+  it('sans effet quand un statut explicite est sélectionné', async () => {
+    await createEntry({ title: 'A', status: 'FINISHED' })
+    await createEntry({ title: 'B', status: 'TO_SORT' })
+    const entries = await listLibrary(USER, {
+      sort: 'title',
+      qualified: true,
+      status: 'TO_SORT',
+    })
+    expect(entries.map((e) => e.game.title)).toEqual(['B'])
+  })
+})

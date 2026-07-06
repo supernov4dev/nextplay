@@ -191,7 +191,12 @@ export async function listLibrary(
   const entries = await prisma.libraryEntry.findMany({
     where: {
       userId,
-      ...(filters.status && { status: filters.status }),
+      ...(filters.status
+        ? { status: filters.status }
+        : filters.qualified
+          ? // « Qualifiés seulement » : masque la file de triage et la Collection
+            { status: { notIn: ['TO_SORT', 'OWNED'] } }
+          : {}),
       ...(filters.platform && { platformsPlayed: { has: filters.platform } }),
       ...(filters.minRating !== undefined && { rating: { gte: filters.minRating } }),
       ...(Object.keys(gameWhere).length > 0 && { game: gameWhere }),
