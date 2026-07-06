@@ -146,6 +146,17 @@ export async function deleteEntry(entryId: string): Promise<void> {
 
 export type EntryWithGameAndPeriods = LibraryEntry & { game: Game; periods: PlayPeriod[] }
 
+// Heures « effectives » d'une entrée : les heures estimées saisies à la main
+// font foi ; à défaut, le temps Steam réel arrondi en heures.
+export function effectiveHours(entry: {
+  estimatedHours: number | null
+  steamPlaytimeMinutes: number | null
+}): number | null {
+  if (entry.estimatedHours != null) return entry.estimatedHours
+  if (entry.steamPlaytimeMinutes != null) return Math.round(entry.steamPlaytimeMinutes / 60)
+  return null
+}
+
 export async function getEntryWithGame(
   entryId: string,
 ): Promise<EntryWithGameAndPeriods | null> {
@@ -173,20 +184,28 @@ export async function listLibrary(
         ? { rating: { sort: 'desc' as const, nulls: 'last' as const } }
         : filters.sort === 'releaseYear'
           ? { game: { releaseYear: { sort: 'desc' as const, nulls: 'last' as const } } }
-          : filters.sort === 'hours'
-            ? { estimatedHours: { sort: 'desc' as const, nulls: 'last' as const } }
-            : { createdAt: 'desc' as const }
+          : // 'hours' combine heures estimées et temps Steam (voir plus bas) —
+            // Prisma ne sait pas trier sur un coalesce de deux colonnes.
+            { createdAt: 'desc' as const }
 
-  return prisma.libraryEntry.findMany({
+  const entries = await prisma.libraryEntry.findMany({
     where: {
       userId,
       ...(filters.status && { status: filters.status }),
       ...(filters.platform && { platformsPlayed: { has: filters.platform } }),
       ...(filters.minRating !== undefined && { rating: { gte: filters.minRating } }),
-      ...(filters.minHours !== undefined && { estimatedHours: { gte: filters.minHours } }),
       ...(Object.keys(gameWhere).length > 0 && { game: gameWhere }),
     },
     include: { game: true, periods: { orderBy: { startYear: 'asc' } } },
     orderBy,
   })
+
+  let results = entries
+  if (filters.minHours !== undefined)
+    results = results.filter((e) => (effectiveHours(e) ?? -1) >= filters.minHours!)
+  if (filters.sort === 'hours')
+    results = [...results].sort(
+      (a, b) => (effectiveHours(b) ?? -1) - (effectiveHours(a) ?? -1),
+    )
+  return results
 }

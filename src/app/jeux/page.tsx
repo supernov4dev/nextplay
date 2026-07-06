@@ -81,7 +81,17 @@ export default async function JeuxPage({
                     {entry.periods.length > 0 ? formatPeriods(entry.periods) : '—'}
                   </td>
                   <td className="p-2 text-zinc-400">
-                    {entry.estimatedHours != null ? `≈ ${entry.estimatedHours} h` : '—'}
+                    {entry.estimatedHours != null ? (
+                      `≈ ${entry.estimatedHours} h`
+                    ) : entry.steamPlaytimeMinutes != null ? (
+                      <span title="Temps de jeu réel enregistré par Steam">
+                        {entry.steamPlaytimeMinutes >= 60
+                          ? `${Math.round(entry.steamPlaytimeMinutes / 60)} h`
+                          : `${entry.steamPlaytimeMinutes} min`}
+                      </span>
+                    ) : (
+                      '—'
+                    )}
                   </td>
                 </tr>
               ))}
