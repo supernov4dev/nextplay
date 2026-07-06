@@ -33,7 +33,10 @@ export default async function JeuxPage({
           {view === 'list' ? 'Vue grille' : 'Vue liste'}
         </Link>
       </div>
-      <LibraryFilterBar filters={filters} view={view} />
+      {/* Le remontage à chaque changement d'URL évite que des champs non
+          contrôlés « ressuscitent » des filtres effacés (champ sale +
+          re-rendu en place). */}
+      <LibraryFilterBar key={JSON.stringify([filters, view])} filters={filters} view={view} />
       {entries.length === 0 && (
         <p className="text-zinc-400">
           Aucun jeu. <Link href="/ajouter" className="text-emerald-400 hover:underline">Ajouter un jeu</Link>

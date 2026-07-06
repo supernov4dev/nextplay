@@ -42,3 +42,11 @@ describe('parseFilters — temps de jeu', () => {
     expect(parseFilters({ minHours: 'abc' })).toEqual({ sort: 'recent' })
   })
 })
+
+describe('parseFilters — qualifiés', () => {
+  it('qualified=1 → filtre qualifiés ; autre valeur → ignoré', () => {
+    expect(parseFilters({ qualified: '1' }).qualified).toBe(true)
+    expect(parseFilters({ qualified: '0' }).qualified).toBeUndefined()
+    expect(parseFilters({}).qualified).toBeUndefined()
+  })
+})
